@@ -103,8 +103,8 @@ lingers, delete it. Then run Tester from the gutter: 116 PASS.
 The test run drops from about 10 s to under 1 s. Files: `experiments/HashingExperiments.java`
 (new), `Tester.java`, `pom.xml`
 
-- [ ] Move `runHashingExperiments` and `printResults` out of Tester into `HashingExperiments.main`
-- [ ] Set the exec plugin's `mainClass` to it
+- [x] Move `runHashingExperiments` and `printResults` out of Tester into `HashingExperiments.main`
+- [x] Set the exec plugin's `mainClass` to it
 
 **Verify (me):**
 - Tester -> 116 PASS in under 1 s.
@@ -306,7 +306,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 
 - [x] **Plan approved** (2026-10-07)
 - [x] **1. Maven build, standard layout, packages** (2026-10-07)
-- [ ] **2. Run the experiments from their own main**
+- [x] **2. Run the experiments from their own main** (2026-10-07)
 - [ ] **3. Move all 116 checks to JUnit**
 - [ ] **4. Fix the audit findings in the existing tests**
 - [ ] **5. Cover the skip list and MyDataStructure gaps**
@@ -335,3 +335,11 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
     - No `-Xlint:all` in the compiler config. The sibling's comment says its sources compile
       warning-free; these have unchecked generic-array warnings, which are out of scope.
     - The exec plugin is declared with no configuration until step 2.
+- **2026-10-07:** Step 2 built.
+  - Behaviour pinned first: the experiments' output from step 1's Tester run, numbers masked
+    (34 lines).
+  - `./mvnw -q exec:java` exit 0, output identical to the pin.
+  - `./mvnw clean verify` exit 0.
+  - Tester: 116 PASS, 0 FAIL, exit 0, 281 ms wall (was 11,084 ms).
+  - Choice the plan didn't settle: the experiments' text is kept byte-for-byte, including the
+    leading blank line, so this stays a pure move.

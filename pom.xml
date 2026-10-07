@@ -82,6 +82,9 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${exec.plugin.version}</version>
+                <configuration>
+                    <mainClass>com.tomer.datastructures.experiments.HashingExperiments</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>
