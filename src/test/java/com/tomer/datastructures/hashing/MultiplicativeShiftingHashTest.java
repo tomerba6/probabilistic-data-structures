@@ -1,0 +1,81 @@
+package com.tomer.datastructures.hashing;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DisplayName("MultiplicativeShiftingHash (DHKP, Task 3.2)")
+class MultiplicativeShiftingHashTest {
+
+    private final MultiplicativeShiftingHash factory = new MultiplicativeShiftingHash();
+
+    @Nested
+    @DisplayName("pickHash(k) argument checks")
+    class ArgumentChecks {
+
+        @Test
+        @DisplayName("rejects k below 0")
+        void negativeK() {
+            assertThrows(IllegalArgumentException.class, () -> factory.pickHash(-1),
+                    "Throws IllegalArgumentException for k < 0");
+        }
+
+        @Test
+        @DisplayName("rejects k above 30")
+        void kAboveThirty() {
+            assertThrows(IllegalArgumentException.class, () -> factory.pickHash(31),
+                    "Throws IllegalArgumentException for k > 30");
+        }
+    }
+
+    @Nested
+    @DisplayName("a function picked with k = 10")
+    class PickedFunction {
+
+        private final int k = 10;
+        private final int m = 1 << k;
+        private MultiplicativeShiftingHash.Functor functor;
+
+        @BeforeEach
+        void pick() {
+            functor = (MultiplicativeShiftingHash.Functor) factory.pickHash(k);
+        }
+
+        @Test
+        @DisplayName("stores a and k")
+        void parameters() {
+            assertTrue(functor.a() > 1, "Parameter 'a' is strictly greater than 1");
+            assertEquals(k, functor.k(), "Parameter 'k' is stored correctly");
+        }
+
+        @Test
+        @DisplayName("computes (a * x) >>> (w - k)")
+        void formula() {
+            long testKey = 42L;
+            long a = functor.a();
+
+            int expectedHash = (int) ((a * testKey) >>> (64 - k));
+
+            assertEquals(expectedHash, functor.hash(testKey), "Hash function accurately calculates (a * x) >>> (w - k)");
+        }
+
+        @Test
+        @DisplayName("hashes positive, negative, large and zero keys into [0, m)")
+        void range() {
+            int hash1 = functor.hash(42L);
+            int hash2 = functor.hash(-999999999L);
+            int hash3 = functor.hash(Long.MAX_VALUE - 5);
+            int hash4 = functor.hash(0L);
+
+            assertTrue(hash1 >= 0 && hash1 < m, "Hash result for normal positive key is a valid index [0, m-1]");
+            assertTrue(hash2 >= 0 && hash2 < m, "Hash result for negative key is a positive valid index [0, m-1] (Thanks to >>>)");
+            assertTrue(hash3 >= 0 && hash3 < m, "Hash result for very large key is a valid index [0, m-1]");
+            assertEquals(0, hash4, "Hash result for key 0 is always 0");
+        }
+    }
+}

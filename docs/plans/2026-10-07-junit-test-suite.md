@@ -119,12 +119,12 @@ A failing check now fails the build, and each test runs on its own. That fixes f
 L2–L3. Files: 6 test classes and `SkipListInvariants` under `src/test/java/com/tomer/datastructures/`;
 Tester.java deleted
 
-- [ ] `skiplist/IndexableSkipListTest` (41 checks: Tasks 2.1, 2.2, 2.3, 2.5) and
+- [x] `skiplist/IndexableSkipListTest` (41 checks: Tasks 2.1, 2.2, 2.3, 2.5) and
       `skiplist/SkipListInvariants`
-- [ ] `hashing/ModularHashTest` (10), `MultiplicativeShiftingHashTest` (9),
+- [x] `hashing/ModularHashTest` (10), `MultiplicativeShiftingHashTest` (9),
       `ChainedHashTableTest` (13), `ProbingHashTableTest` (16)
-- [ ] `composite/MyDataStructureTest` (27)
-- [ ] Delete Tester.java
+- [x] `composite/MyDataStructureTest` (27)
+- [x] Delete Tester.java
 
 **Verify (me):**
 - `./mvnw verify` -> BUILD SUCCESS, 0 failures. Record the test count and JaCoCo's per-package line
@@ -307,7 +307,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **Plan approved** (2026-10-07)
 - [x] **1. Maven build, standard layout, packages** (2026-10-07)
 - [x] **2. Run the experiments from their own main** (2026-10-07)
-- [ ] **3. Move all 116 checks to JUnit**
+- [x] **3. Move all 116 checks to JUnit** (2026-10-07)
 - [ ] **4. Fix the audit findings in the existing tests**
 - [ ] **5. Cover the skip list and MyDataStructure gaps**
 - [ ] **6. Cover the hashing gaps and add the coverage floor**
@@ -343,3 +343,32 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
   - Tester: 116 PASS, 0 FAIL, exit 0, 281 ms wall (was 11,084 ms).
   - Choice the plan didn't settle: the experiments' text is kept byte-for-byte, including the
     leading blank line, so this stays a pure move.
+- **2026-10-07:** Step 3 built.
+  - `./mvnw clean verify`: BUILD SUCCESS, 66 tests in 6 classes, 0 failures.
+  - The message script read Tester's 116 `check()` calls (112 distinct messages); all 112 appear
+    in `src/test/java` at least as often.
+  - JaCoCo line coverage: 68.9% total (353/512).
+
+    | Package | Line coverage |
+    |---|---|
+    | composite | 100% (34/34) |
+    | hashing | 84.0% (163/194) |
+    | skiplist | 79.3% (134/169) |
+    | core | 75.9% (22/29) |
+    | experiments | 0% (0/86) |
+
+  - M5 in scratch: `verify` exit 1, 7 failures + 4 errors out of 66. All 6 classes ran; the NPEs
+    fail only their own tests.
+  - Choices the plan didn't settle:
+    - Each test replays the original scenario up to its check, so it builds the exact state that
+      check saw.
+    - `&&` checks over several keys are split into one assertion per key, with `(key N)` added to
+      the message.
+    - Null-then-key checks become `assertNotNull` + `assertEquals`, both carrying the message.
+  - Open for step 6: the floor's figure includes `experiments` (benchmark code, 0% by design).
+  - IntelliJ first failed with "package org.junit.jupiter.api does not exist".
+    - Cause: the pre-Maven `probabilistic-data-structures.iml` survived the Maven import and still
+      marked all of `src/` as production source; `.idea/modules.xml` still pointed at it.
+    - Fix: with the project closed, both git-ignored files were deleted, matching
+      dynamic-sets-implementation.
+    - Then all tests passed in IntelliJ's runner (you checked).
