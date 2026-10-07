@@ -167,7 +167,7 @@ tests, `IndexableSkipListTest`
 
 Files: `IndexableSkipListTest`, `MyDataStructureTest`
 
-- [ ] Write the tests for the plan's MyDataStructure scenarios:
+- [x] Write the tests for the plan's MyDataStructure scenarios:
   - insert 10..50, delete 30 -> `rank(35)` = 2, `select(2)` = 40, `range(10, 50)` = [10, 20, 40, 50];
   - after deleting 30, `range(30, 50)` is null;
   - delete then re-insert the same value;
@@ -175,14 +175,15 @@ Files: `IndexableSkipListTest`, `MyDataStructureTest`
   - N = 1;
   - `range(15, 20)` = [15] and `range(25, 20)` = [];
   - negatives and 0.
-- [ ] Write the skip-list tests:
+- [x] Write the skip-list tests:
   - 200 keys in a seeded shuffled order, delete every third -> invariants hold, and `rank`/`select`
     match a sorted reference for every key;
   - height back to 0 once emptied;
   - `minimum`/`maximum`, both on an empty list (throws) and on values;
   - `successor`/`predecessor`;
   - `calculateExpectedHeight(0.5)` = 1.0 and `calculateExpectedHeight(0.25)` = 3.0.
-- [ ] If any of them fails on the current code: stop and report (a new bug), don't change the code.
+- [x] If any of them fails on the current code: stop and report (a new bug), don't change the code.
+      (None failed.)
 
 **Verify (me):**
 - `./mvnw verify` green.
@@ -309,7 +310,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **2. Run the experiments from their own main** (2026-10-07)
 - [x] **3. Move all 116 checks to JUnit** (2026-10-07)
 - [x] **4. Fix the audit findings in the existing tests** (2026-10-08)
-- [ ] **5. Cover the skip list and MyDataStructure gaps**
+- [x] **5. Cover the skip list and MyDataStructure gaps** (2026-10-08)
 - [ ] **6. Cover the hashing gaps and add the coverage floor**
 - [ ] **7. Fix: range() returns the tail sentinel**
 - [ ] **8. Fix: multiplicative hash with k = 0 hashes out of range**
@@ -330,6 +331,9 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
   hashing tests. None of findings 3, 4, 6 and 7 is about the chained table; its gaps are in step 6.
   Its message "doubled … after exceeding load factor" is loose: the table doubles when the load
   reaches 1.5. Step 6's boundary test covers that.
+- **5:** `calculateExpectedHeight` is tested in a new `skiplist/SkipListUtilsTest`, not in
+  `IndexableSkipListTest`: the test style is one test class per production class, and the method
+  is on `SkipListUtils`.
 
 ### Session log
 
@@ -406,3 +410,21 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
       0.25, the hash formulas over 42, MIN and MAX.
     - The height tolerance is per level, 5·sqrt(q(1−q)/n) with q = p(1−p)^h. For p = 0.5 at
       height 0 that is 0.0025, where it was 0.01.
+- **2026-10-08:** Step 5 built.
+  - `./mvnw clean verify`: BUILD SUCCESS, 90 tests (was 74), 0 failures. None of the 16 new tests
+    failed on the current code, so no new bug.
+  - Line coverage 71.3% (365/512); skiplist 85.8% (145/169), was 79.3%. The other packages are
+    unchanged.
+  - Planted bugs in scratch, 5 runs each; every run exited 1:
+    - M3 (delete skips the skip list): 5 of 5. The same 3 new tests failed every run:
+      `orderQueries`, `reinsert` and `capacityOne`.
+    - M5 (insert doesn't widen the links above the new node): 5 of 5, with 10 to 14 failing tests
+      a run. The new `deleteEveryThird` failed in all 5.
+    - `git diff src/main` was empty afterwards.
+  - Choices the plan didn't settle:
+    - The 200 keys are 0, 10, …, 1990, shuffled with `new Random(42)`. "Every third" means
+      positions 0, 3, 6, … of the shuffled order, so the deletions are scattered across the list.
+    - `rank` is checked for all 200 keys, deleted ones included, against a count of the remaining
+      keys below each one.
+    - The emptying test first asserts that the 200 inserts raised the height above 0, so it can't
+      pass without exercising the shrink. The chance of that setup failing is 2^-200.

@@ -7,10 +7,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Random;
+
 import static com.tomer.datastructures.skiplist.SkipListInvariants.assertWidthsValid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("IndexableSkipList")
@@ -314,6 +321,100 @@ class IndexableSkipListTest {
             list.insert(25);
             assertEquals(25, list.select(2), "Select(2) dynamically shifts to 25 after insertion");
             assertEquals(40, list.select(3), "Select(3) shifts back to 40");
+        }
+    }
+
+    @Nested
+    @DisplayName("minimum and maximum")
+    class MinimumAndMaximum {
+
+        @Test
+        @DisplayName("throw on an empty list")
+        void emptyList() {
+            assertThrows(NoSuchElementException.class, list::minimum, "minimum of an empty list throws");
+            assertThrows(NoSuchElementException.class, list::maximum, "maximum of an empty list throws");
+        }
+
+        @Test
+        @DisplayName("return the smallest and the largest element")
+        void nonEmptyList() {
+            insertAll(30, 10, 50, 20, 40);
+            assertEquals(10, list.minimum().key(), "minimum returns the smallest element (10)");
+            assertEquals(50, list.maximum().key(), "maximum returns the largest element (50)");
+        }
+    }
+
+    @Nested
+    @DisplayName("successor and predecessor")
+    class SuccessorAndPredecessor {
+
+        @Test
+        @DisplayName("step to the neighbours of a middle element")
+        void middleElement() {
+            insertAll(10, 20, 30, 40, 50);
+            AbstractSkipList.SkipListNode node = list.search(30);
+            assertEquals(40, list.successor(node).key(), "successor of 30 is 40");
+            assertEquals(20, list.predecessor(node).key(), "predecessor of 30 is 20");
+        }
+    }
+
+    @Nested
+    @DisplayName("200 keys inserted in a shuffled order")
+    class ShuffledKeys {
+
+        private final List<Integer> keys = new ArrayList<>();
+
+        @BeforeEach
+        void insertShuffled() {
+            for (int i = 0; i < 200; i++) {
+                keys.add(i * 10);
+            }
+            Collections.shuffle(keys, new Random(42));
+            for (int key : keys) {
+                list.insert(key);
+            }
+        }
+
+        @Test
+        @DisplayName("keeps widths, rank and select right after deleting every third key")
+        void deleteEveryThird() {
+            assertWidthsValid(list, "Widths correct after 200 shuffled insertions");
+
+            List<Integer> remaining = new ArrayList<>();
+            for (int i = 0; i < keys.size(); i++) {
+                if (i % 3 == 0) {
+                    assertTrue(deleteKey(keys.get(i)), "Deleted key " + keys.get(i));
+                } else {
+                    remaining.add(keys.get(i));
+                }
+            }
+            Collections.sort(remaining);
+
+            assertWidthsValid(list, "Widths correct after deleting every third key");
+            assertEquals(remaining.size(), list.size, "Size counts the remaining keys");
+            for (int i = 0; i < remaining.size(); i++) {
+                int expected = remaining.get(i);
+                assertEquals(expected, list.select(i), "Select(" + i + ") matches the sorted remaining keys");
+            }
+            for (int key : keys) {
+                int smaller = (int) remaining.stream().filter(k -> k < key).count();
+                assertEquals(smaller, list.rank(key), "Rank(" + key + ") counts the remaining keys below it");
+            }
+        }
+
+        @Test
+        @DisplayName("returns to height 0 once every key is deleted")
+        void emptiedListHasHeightZero() {
+            assertTrue(list.head.height() > 0, "Setup: 200 insertions raised the list above height 0");
+
+            for (int key : keys) {
+                deleteKey(key);
+            }
+
+            assertEquals(0, list.size, "Size is 0 after deleting all 200 keys");
+            assertEquals(0, list.head.height(), "Head is back to height 0");
+            assertEquals(0, list.tail.height(), "Tail is back to height 0");
+            assertWidthsValid(list, "Widths correct after emptying the list");
         }
     }
 }
