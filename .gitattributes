@@ -1,0 +1,14 @@
+# Normalise line endings so the repo behaves the same on Windows and on Linux CI runners.
+* text=auto
+
+# The Maven wrapper is executed by /bin/sh on Linux and macOS. Committed with CRLF it
+# fails there with "bad interpreter", so pin it to LF regardless of the checkout platform.
+mvnw text eol=lf
+
+# Windows-only counterpart: must keep CRLF.
+mvnw.cmd text eol=crlf
+
+# Java sources are text; be explicit so no heuristic can treat them as binary.
+*.java text
+*.xml text
+*.yml text

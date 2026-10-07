@@ -1,5 +1,7 @@
+package com.tomer.datastructures.core;
+
 /**
- * This class represents a general element in a general data structure, 
+ * This class represents a general element in a general data structure,
  * with key and satellite data.
  * @param <K> The type of the key.
  * @param <V> The type of the satellite data.

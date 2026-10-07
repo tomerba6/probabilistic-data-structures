@@ -1,3 +1,5 @@
+package com.tomer.datastructures.core;
+
 /**
  * This class represents an immutable pair of values of different types.
  * @param <T> First value

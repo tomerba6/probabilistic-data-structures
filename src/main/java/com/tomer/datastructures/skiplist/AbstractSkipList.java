@@ -1,3 +1,7 @@
+package com.tomer.datastructures.skiplist;
+
+import com.tomer.datastructures.core.Element;
+
 import java.util.NoSuchElementException;
 
 import java.util.ArrayList;

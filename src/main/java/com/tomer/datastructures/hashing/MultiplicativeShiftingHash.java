@@ -1,3 +1,5 @@
+package com.tomer.datastructures.hashing;
+
 import java.util.Random;
 
 public class MultiplicativeShiftingHash implements HashFactory<Long> {

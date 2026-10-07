@@ -1,3 +1,10 @@
+package com.tomer.datastructures.composite;
+
+import com.tomer.datastructures.hashing.ChainedHashTable;
+import com.tomer.datastructures.hashing.ModularHash;
+import com.tomer.datastructures.skiplist.AbstractSkipList;
+import com.tomer.datastructures.skiplist.IndexableSkipList;
+
 import java.util.ArrayList;
 import java.util.List;
 

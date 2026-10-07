@@ -80,13 +80,13 @@ test is seen failing.
 Files: `pom.xml`, `mvnw`, `mvnw.cmd`, `.mvn/wrapper/maven-wrapper.properties`, `.gitignore`, every
 `src/*.java`
 
-- [ ] `git mv` each class to `src/main/java/com/tomer/datastructures/<package>/`, add its
+- [x] `git mv` each class to `src/main/java/com/tomer/datastructures/<package>/`, add its
       `package` line and the imports it needs (all cross-package members used are already public)
-- [ ] `git mv` Tester to `src/test/java/com/tomer/datastructures/skiplist/Tester.java`, for now (it
+- [x] `git mv` Tester to `src/test/java/com/tomer/datastructures/skiplist/Tester.java`, for now (it
       reads the skip list's protected `head`/`tail`/`size`)
-- [ ] pom modelled on the sibling's: JUnit, surefire, JaCoCo `prepare-agent` + `report`, and exec
+- [x] pom modelled on the sibling's: JUnit, surefire, JaCoCo `prepare-agent` + `report`, and exec
       plugin with `mainClass` left for step 2
-- [ ] `.gitignore`: add the sibling's Maven block (`target/`, wrapper jar)
+- [x] `.gitignore`: add the sibling's Maven block (`target/`, wrapper jar)
 
 **Verify (me):**
 - `./mvnw -q verify` -> BUILD SUCCESS.
@@ -305,7 +305,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 ## Progress
 
 - [x] **Plan approved** (2026-10-07)
-- [ ] **1. Maven build, standard layout, packages**
+- [x] **1. Maven build, standard layout, packages** (2026-10-07)
 - [ ] **2. Run the experiments from their own main**
 - [ ] **3. Move all 116 checks to JUnit**
 - [ ] **4. Fix the audit findings in the existing tests**
@@ -317,6 +317,21 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 
 ### Deviations
 
+- **1:** The plan listed no `.gitattributes`; I added the sibling's.
+  - Why: it pins `mvnw` to LF. This machine has `core.autocrlf=true`, and a CRLF `mvnw` fails
+    under `/bin/sh`.
+  - Left out its `*.md text` line: `README.md` is UTF-16, and forcing it to text would insert CR
+    bytes on checkout and corrupt it. Step 9 restores the line once the README is UTF-8.
+
 ### Session log
 
 - **2026-10-07:** Plan approved. Baseline: 116 of 116 Tester checks passing (exit 0), HEAD `24aed09`.
+- **2026-10-07:** Step 1 built.
+  - `./mvnw verify`: BUILD SUCCESS on Maven 3.9.16 / JDK 21, JUnit 6.1.3 resolved, 0 JUnit tests
+    yet. Surefire does not pick up Tester.
+  - Tester from `target/`: 116 PASS, 0 FAIL, exit 0.
+  - All 16 files are staged as renames (74–98% similarity). `mvnw` is staged 100755 with LF.
+  - Choices the plan didn't settle:
+    - No `-Xlint:all` in the compiler config. The sibling's comment says its sources compile
+      warning-free; these have unchecked generic-array warnings, which are out of scope.
+    - The exec plugin is declared with no configuration until step 2.

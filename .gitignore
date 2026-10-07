@@ -1,3 +1,9 @@
+### Maven ###
+target/
+# The wrapper scripts and properties are committed on purpose so the repo clones and runs
+# with no local Maven install; only the downloaded distribution is ignored.
+.mvn/wrapper/maven-wrapper.jar
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/

@@ -1,3 +1,7 @@
+package com.tomer.datastructures.hashing;
+
+import com.tomer.datastructures.core.Element;
+
 import java.util.List;
 import java.util.LinkedList;
 
