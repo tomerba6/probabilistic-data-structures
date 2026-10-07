@@ -38,21 +38,11 @@ class ProbingHashTableTest {
         }
 
         @Test
-        @DisplayName("deletes a key and still finds the keys after it")
+        @DisplayName("deletes a present key")
         void delete() {
             insertTenTwentyThirty();
             assertTrue(table.delete(20), "Delete returns true for existing key");
             assertNull(table.search(20), "Key 20 is no longer found after deletion");
-            assertEquals("Value_30", table.search(30), "Search correctly skips over DELETED cells to find subsequent keys");
-        }
-
-        @Test
-        @DisplayName("inserts into a table that holds DELETED cells")
-        void insertAfterDelete() {
-            insertTenTwentyThirty();
-            table.delete(20);
-            table.insert(40, "Value_40");
-            assertEquals("Value_40", table.search(40), "Insert successfully functions when table contains DELETED cells");
         }
 
         @Test
@@ -63,12 +53,12 @@ class ProbingHashTableTest {
             table.insert(40, "Value_40");
             table.insert(50, "Value_50");
 
-            assertEquals(8, table.capacity(), "Table successfully doubled capacity to 8 after exceeding load factor");
-            assertEquals("Value_10", table.search(10), "All live elements successfully migrated and are searchable after rehash (key 10)");
-            assertEquals("Value_30", table.search(30), "All live elements successfully migrated and are searchable after rehash (key 30)");
-            assertEquals("Value_40", table.search(40), "All live elements successfully migrated and are searchable after rehash (key 40)");
-            assertEquals("Value_50", table.search(50), "All live elements successfully migrated and are searchable after rehash (key 50)");
-            assertNull(table.search(20), "Deleted elements were correctly pruned during rehash");
+            assertEquals(8, table.capacity(), "Capacity is 8: the table doubled at insert 30, when the load reached 0.75");
+            assertEquals("Value_10", table.search(10), "Every live key is found after the resize (key 10)");
+            assertEquals("Value_30", table.search(30), "Every live key is found after the resize (key 30)");
+            assertEquals("Value_40", table.search(40), "Every live key is found after the resize (key 40)");
+            assertEquals("Value_50", table.search(50), "Every live key is found after the resize (key 50)");
+            assertNull(table.search(20), "Key 20, deleted after the resize, stays absent through the later inserts");
         }
     }
 
@@ -99,7 +89,7 @@ class ProbingHashTableTest {
         }
 
         @Test
-        @DisplayName("deletes several keys and still finds the keys after them")
+        @DisplayName("no longer finds deleted keys")
         void delete() {
             insertHundreds();
             table.delete(200L);
@@ -107,7 +97,6 @@ class ProbingHashTableTest {
 
             assertNull(table.search(200L), "Multiple Long keys successfully deleted (key 200)");
             assertNull(table.search(300L), "Multiple Long keys successfully deleted (key 300)");
-            assertEquals("Quatre Cents", table.search(400L), "Search successfully navigates through a sequence of multiple DELETED cells");
         }
 
         @Test
@@ -120,10 +109,80 @@ class ProbingHashTableTest {
             table.insert(600L, "Six Cents");
             table.insert(700L, "Sept Cents");
 
-            assertEquals(16, table.capacity(), "Table successfully expanded to 16 after bulk Long insertions");
-            assertEquals("Cent", table.search(100L), "All Long keys accurately re-hashed into the expanded table (key 100)");
-            assertEquals("Quatre Cents", table.search(400L), "All Long keys accurately re-hashed into the expanded table (key 400)");
-            assertEquals("Sept Cents", table.search(700L), "All Long keys accurately re-hashed into the expanded table (key 700)");
+            assertEquals(16, table.capacity(), "Capacity is 16: the table doubled at insert 400, when the load reached 0.5");
+            assertEquals("Cent", table.search(100L), "Every live Long key is found after the resize (key 100)");
+            assertEquals("Quatre Cents", table.search(400L), "Every live Long key is found after the resize (key 400)");
+            assertEquals("Sept Cents", table.search(700L), "Every live Long key is found after the resize (key 700)");
+        }
+    }
+
+    @Nested
+    @DisplayName("with every key hashed to slot 0, so all keys share one probe chain")
+    class WhenEveryKeyCollides {
+
+        // k = 3 and load factor 0.75: the first resize comes at the sixth insert, after these tests.
+        private final ProbingHashTable<Integer, String> table =
+                new ProbingHashTable<>(new FixedHashFactory<>((key, m) -> 0), 3, 0.75);
+
+        private void insertAll(int... keys) {
+            for (int key : keys) {
+                table.insert(key, "Value_" + key);
+            }
+        }
+
+        @Test
+        @DisplayName("skips a DELETED cell to find the key after it")
+        void skipsADeletedCell() {
+            insertAll(10, 20, 30);
+            table.delete(20);
+            assertEquals("Value_30", table.search(30), "Search correctly skips over DELETED cells to find subsequent keys");
+        }
+
+        @Test
+        @DisplayName("skips a run of DELETED cells to find the key after them")
+        void skipsARunOfDeletedCells() {
+            insertAll(10, 20, 30, 40);
+            table.delete(20);
+            table.delete(30);
+            assertEquals("Value_40", table.search(40), "Search successfully navigates through a sequence of multiple DELETED cells");
+        }
+
+        @Test
+        @DisplayName("inserts into a chain that holds a DELETED cell")
+        void insertAfterDelete() {
+            insertAll(10, 20, 30);
+            table.delete(20);
+            table.insert(40, "Value_40");
+            assertEquals("Value_40", table.search(40), "Insert successfully functions when table contains DELETED cells");
+        }
+    }
+
+    @Nested
+    @DisplayName("resizing after a delete, with key mod m as the hash")
+    class ResizeAfterDelete {
+
+        // k = 2 and load factor 0.75: keys 0 to 3 land in slots 0 to 3, and the insert that would
+        // bring the load to 3/4 doubles the table first.
+        private final ProbingHashTable<Integer, String> table =
+                new ProbingHashTable<>(new FixedHashFactory<>((key, m) -> Math.floorMod(key, m)), 2, 0.75);
+
+        @Test
+        @DisplayName("drops the DELETED cell and keeps every live key")
+        void dropsDeletedCells() {
+            table.insert(0, "Value_0");
+            table.insert(1, "Value_1");
+            table.delete(1);
+            table.insert(2, "Value_2");
+            assertEquals(4, table.capacity(), "Capacity is still 4 before the insert that brings the load to 0.75");
+
+            // Slot 1 still holds the DELETED marker. A resize that copied it would hash its null key and throw.
+            table.insert(3, "Value_3");
+
+            assertEquals(8, table.capacity(), "Capacity doubled to 8 on the insert that brought the load to 0.75");
+            assertNull(table.search(1), "Deleted key 1 is not found after the resize");
+            assertEquals("Value_0", table.search(0), "Every live key is found after the resize (key 0)");
+            assertEquals("Value_2", table.search(2), "Every live key is found after the resize (key 2)");
+            assertEquals("Value_3", table.search(3), "Every live key is found after the resize (key 3)");
         }
     }
 }

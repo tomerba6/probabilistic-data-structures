@@ -4,6 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,19 +58,18 @@ class ModularHashTest {
             assertEquals(1 << k, functor.m(), "Parameter 'm' correctly calculated as 2^k");
         }
 
-        @Test
-        @DisplayName("computes ((a*x + b) mod p) mod m")
-        void formula() {
-            int testKey = 42;
-            long a = functor.a();
-            long b = functor.b();
-            long p = functor.p();
-            int m = functor.m();
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(ints = {42, Integer.MIN_VALUE, Integer.MAX_VALUE})
+        @DisplayName("computes ((a*x + b) mod p) mod m, checked with BigInteger")
+        void formula(int key) {
+            BigInteger a = BigInteger.valueOf(functor.a());
+            BigInteger b = BigInteger.valueOf(functor.b());
+            BigInteger p = BigInteger.valueOf(functor.p());
+            BigInteger m = BigInteger.valueOf(functor.m());
 
-            long expectedInner = HashingUtils.mod((a * testKey + b), p);
-            int expectedHash = (int) HashingUtils.mod(expectedInner, m);
+            int expectedHash = a.multiply(BigInteger.valueOf(key)).add(b).mod(p).mod(m).intValueExact();
 
-            assertEquals(expectedHash, functor.hash(testKey), "Hash function accurately calculates ((a*x + b) mod p) mod m");
+            assertEquals(expectedHash, functor.hash(key), "Hash function accurately calculates ((a*x + b) mod p) mod m (x = " + key + ")");
         }
 
         @Test

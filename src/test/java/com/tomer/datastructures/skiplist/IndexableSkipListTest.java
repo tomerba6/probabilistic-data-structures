@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static com.tomer.datastructures.skiplist.SkipListInvariants.assertWidthsValid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -106,10 +108,11 @@ class IndexableSkipListTest {
     @DisplayName("generateHeight (Task 2.3)")
     class GenerateHeight {
 
-        @Test
-        @DisplayName("follows the geometric distribution for p = 0.5")
-        void geometricDistribution() {
-            double p = 0.5;
+        // p = 0.25 tells p from 1 - p: at p = 0.5 an inverted coin draws the same distribution.
+        @ParameterizedTest(name = "p = {0}")
+        @ValueSource(doubles = {0.5, 0.25})
+        @DisplayName("follows the geometric distribution P(h) = p(1-p)^h")
+        void geometricDistribution(double p) {
             IndexableSkipList heights = new IndexableSkipList(p);
 
             int n = 1_000_000;
@@ -122,11 +125,13 @@ class IndexableSkipListTest {
             }
 
             double currentExpectedProb = p;
-            double epsilon = 0.01; // standard deviation
             for (int h = 0; h < 5; h++) {
                 double actualProb = (double) heightCounts[h] / n;
-                assertEquals(currentExpectedProb, actualProb, epsilon,
-                        "generateHeight distribution perfectly matches geometric process with p=" + p);
+                // Each count is binomial, so its frequency has standard deviation sqrt(q(1-q)/n).
+                // A 5 standard deviation tolerance fails by chance about once in 1.7 million runs per level.
+                double tolerance = 5 * Math.sqrt(currentExpectedProb * (1 - currentExpectedProb) / n);
+                assertEquals(currentExpectedProb, actualProb, tolerance,
+                        "Frequency of height " + h + " is within 5 standard deviations of p(1-p)^h, with p=" + p);
                 currentExpectedProb = currentExpectedProb * (1 - p);
             }
         }

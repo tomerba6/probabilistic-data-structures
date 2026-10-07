@@ -141,14 +141,14 @@ Tester.java deleted
 Findings 3, 4, 6 and 7. Files: `hashing/FixedHashFactory.java` (new, test-only), the four hashing
 tests, `IndexableSkipListTest`
 
-- [ ] `FixedHashFactory`: a `HashFactory` whose hash the test chooses (e.g. every key to slot 0).
+- [x] `FixedHashFactory`: a `HashFactory` whose hash the test chooses (e.g. every key to slot 0).
       The DELETED-skip checks use it, so the collision happens on every run.
-- [ ] Probing: delete, then insert until a resize. Assert capacity before and after the triggering
+- [x] Probing: delete, then insert until a resize. Assert capacity before and after the triggering
       insert, the deleted key absent, the others found. Reword the 3 untrue messages
       (`:478`, `:485`, `:516`).
-- [ ] `generateHeight` at p = 0.5 and p = 0.25. Tolerance 5σ worked out from n and p. Fix the
+- [x] `generateHeight` at p = 0.5 and p = 0.25. Tolerance 5σ worked out from n and p. Fix the
       "standard deviation" comment and the "perfectly matches" message.
-- [ ] Hash expectations computed with `BigInteger` at `Integer`/`Long` MIN and MAX, not with the
+- [x] Hash expectations computed with `BigInteger` at `Integer`/`Long` MIN and MAX, not with the
       code's own formula.
 
 **Verify (me):**
@@ -308,7 +308,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **1. Maven build, standard layout, packages** (2026-10-07)
 - [x] **2. Run the experiments from their own main** (2026-10-07)
 - [x] **3. Move all 116 checks to JUnit** (2026-10-07)
-- [ ] **4. Fix the audit findings in the existing tests**
+- [x] **4. Fix the audit findings in the existing tests** (2026-10-08)
 - [ ] **5. Cover the skip list and MyDataStructure gaps**
 - [ ] **6. Cover the hashing gaps and add the coverage floor**
 - [ ] **7. Fix: range() returns the tail sentinel**
@@ -322,6 +322,14 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
     under `/bin/sh`.
   - Left out its `*.md text` line: `README.md` is UTF-16, and forcing it to text would insert CR
     bytes on checkout and corrupt it. Step 9 restores the line once the README is UTF-8.
+- **4:** The resize-after-delete test hashes each key to key mod m, not every key to slot 0.
+  - Why: with every key in one chain, each insert after a delete reuses the first DELETED cell, so
+    none is left when the resize comes and M4 goes unseen. Key mod m puts each key in a slot the
+    test picks.
+- **4:** `ChainedHashTableTest` is unchanged, although the step's Files line names the four
+  hashing tests. None of findings 3, 4, 6 and 7 is about the chained table; its gaps are in step 6.
+  Its message "doubled … after exceeding load factor" is loose: the table doubles when the load
+  reaches 1.5. Step 6's boundary test covers that.
 
 ### Session log
 
@@ -372,3 +380,29 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
     - Fix: with the project closed, both git-ignored files were deleted, matching
       dynamic-sets-implementation.
     - Then all tests passed in IntelliJ's runner (you checked).
+- **2026-10-07:** Step 4 built.
+  - Resize points measured first (jshell on the real classes): the probing Integer scenario
+    doubles at insert 30, the Long one at insert 400, the chained Integer one at insert 70.
+  - `./mvnw clean verify`: BUILD SUCCESS, 74 tests (was 66), 0 failures. Line coverage 69.1%
+    (354/512); hashing 84.5% (164/194), the other packages unchanged.
+  - Planted bugs in scratch, 5 runs each; every run exited 1:
+
+    | Bug | Caught | By |
+    |---|---|---|
+    | M1 coin inverted | 5 of 5 | `generateHeight` at p = 0.25, height 0 |
+    | M2 delete empties the slot | 5 of 5 | `skipsADeletedCell`, `skipsARunOfDeletedCells` |
+    | M4 rehash copies DELETED | 5 of 5 | `dropsDeletedCells` (NPE hashing the marker's null key) |
+    | `(long) a * key` to `a * key` | 5 of 5 | `ModularHashTest.formula` at 42 and MAX every run, at MIN in 3 |
+
+    `git diff src/main` was empty afterwards.
+  - Choices the plan didn't settle:
+    - The 3 DELETED-skip checks moved from the random-hash groups into a new "every key hashed
+      to slot 0" group. The multiple-DELETED check now uses Integer keys, not Long: once the hash
+      is fixed, the key type never reaches the probing code.
+    - Besides the 3 named messages, the 7 per-key "migrated … after rehash" messages now read
+      "Every live key is found after the resize (key N)". Of those keys, only 10 and 100 were in
+      the table when it resized.
+    - Parameterized with `@ValueSource`, as the sibling does: `generateHeight` over p = 0.5 and
+      0.25, the hash formulas over 42, MIN and MAX.
+    - The height tolerance is per level, 5·sqrt(q(1−q)/n) with q = p(1−p)^h. For p = 0.5 at
+      height 0 that is 0.0025, where it was 0.01.

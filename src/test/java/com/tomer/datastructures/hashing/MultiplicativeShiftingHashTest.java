@@ -4,6 +4,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -53,15 +57,16 @@ class MultiplicativeShiftingHashTest {
             assertEquals(k, functor.k(), "Parameter 'k' is stored correctly");
         }
 
-        @Test
-        @DisplayName("computes (a * x) >>> (w - k)")
-        void formula() {
-            long testKey = 42L;
-            long a = functor.a();
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(longs = {42L, Long.MIN_VALUE, Long.MAX_VALUE})
+        @DisplayName("computes the top k bits of (a * x) mod 2^w, checked with BigInteger")
+        void formula(long key) {
+            BigInteger wordModulus = BigInteger.ONE.shiftLeft(64);
 
-            int expectedHash = (int) ((a * testKey) >>> (64 - k));
+            int expectedHash = BigInteger.valueOf(functor.a()).multiply(BigInteger.valueOf(key))
+                    .mod(wordModulus).shiftRight(64 - k).intValueExact();
 
-            assertEquals(expectedHash, functor.hash(testKey), "Hash function accurately calculates (a * x) >>> (w - k)");
+            assertEquals(expectedHash, functor.hash(key), "Hash function accurately calculates (a * x) >>> (w - k) (x = " + key + ")");
         }
 
         @Test
