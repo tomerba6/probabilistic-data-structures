@@ -219,50 +219,32 @@ abstract public class AbstractSkipList {
         }
 
         public SkipListNode getPrev(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return prev.get(level);
         }
 
         public SkipListNode getNext(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return next.get(level);
         }
 
         public int getNextWidth(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return nextWidth.get(level);
         }
 
         public void setNext(int level, SkipListNode next) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.next.set(level, next);
         }
 
         public void setPrev(int level, SkipListNode prev) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.prev.set(level, prev);
         }
 
         public void setNextWidth(int level, int nextWidth) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.nextWidth.set(level, nextWidth);
         }
 
@@ -281,5 +263,11 @@ abstract public class AbstractSkipList {
         }
 
         public int height() { return height; }
+
+        private void checkLevel(int level) {
+            if (level > height) {
+                throw new IllegalStateException("Level " + level + " is above this node's height " + height);
+            }
+        }
     }
 }
