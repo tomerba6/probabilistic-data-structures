@@ -3,16 +3,11 @@ package com.tomer.datastructures.hashing;
 import com.tomer.datastructures.core.Pair;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 public class HashingUtils {
-    final private static int a_ASCII = 97;
-    final private static int z_ASCII = 122;
     final private Random rand;
 
     public HashingUtils() {
@@ -64,29 +59,6 @@ public class HashingUtils {
                 .distinct()
                 .limit(numOfItemsToGen)
                 .toArray(Integer[]::new);
-    }
-
-    public Long[] genUniqueLong(int numOfItemsToGen) {
-        return Stream.generate(() -> rand.longs(0, Long.MAX_VALUE))
-                     .flatMap(LongStream::boxed)
-                     .distinct()
-                     .limit(numOfItemsToGen)
-                     .toArray(Long[]::new);
-    }
-
-    public List<String> genUniqueStrings(int numOfItemsToGen, int stringMinLength, int stringMaxLength) {
-       return rand.ints(stringMinLength, stringMaxLength)
-                   .limit(numOfItemsToGen)
-                   .mapToObj(length -> rand.ints(a_ASCII,
-                                                 z_ASCII
-                                                 + 1)
-                                           .limit(length)
-                                           .collect(StringBuilder::new,
-                                                    StringBuilder::appendCodePoint,
-                                                    StringBuilder::append)
-                                           .toString())
-                   .distinct()
-                   .collect(Collectors.toList());
     }
 
     private static Pair<Integer, Long> calculateEvenDivisorSplit(long num) {

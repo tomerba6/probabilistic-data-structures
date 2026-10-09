@@ -20,10 +20,6 @@ public class Element<K,V> {
 	public Element(K key) {
 		this(key, null);
 	}
-	
-	public Element(Element<K,V> element) {
-		this(element.key(), element.satelliteData());
-	}
 
 //--------------------methods-------------------------------------
 	public K key() {
@@ -33,15 +29,7 @@ public class Element<K,V> {
 	public V satelliteData() {
 		return this.satelliteData;
 	}
-	
-	public void setKey(K key) {
-		this.key = key;
-	}
-	
-	public void setSatData(V satelliteData) {
-		this.satelliteData = satelliteData;
-	}
-	
+
 	public boolean equals(Object other){
 		boolean ans = false;        
 		if (other instanceof Element<?,?>) {

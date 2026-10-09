@@ -2,13 +2,7 @@ package com.tomer.datastructures.hashing;
 
 import com.tomer.datastructures.core.Element;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ArrayList;
-
 public class ProbingHashTable<K, V> implements HashTable<K, V> {
-    final static int DEFAULT_INIT_CAPACITY = 4;
-    final static double DEFAULT_MAX_LOAD_FACTOR = 0.75;
     private final Element<K, V> DELETED = new Element<>(null, null);
     final private HashFactory<K> hashFactory;
     final private double maxLoadFactor;
@@ -27,10 +21,6 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
         this.table = new Element[capacity];
         this.tableSize = 0;
 
-    }
-	
-	public ProbingHashTable(HashFactory<K> hashFactory) {
-        this(hashFactory, DEFAULT_INIT_CAPACITY, DEFAULT_MAX_LOAD_FACTOR);
     }
 
     public V search(K key) {
@@ -100,10 +90,6 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
             index = (index + 1) % capacity;
         }
         return false;
-    }
-
-    public HashFunctor<K> getHashFunc() {
-        return hashFunc;
     }
 
     public int capacity() { return capacity; }

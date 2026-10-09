@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.LinkedList;
 
 public class ChainedHashTable<K, V> implements HashTable<K, V> {
-    final static int DEFAULT_INIT_CAPACITY = 4;
-    final static double DEFAULT_MAX_LOAD_FACTOR = 2;
     final private HashFactory<K> hashFactory;
     final private double maxLoadFactor;
     private int capacity;
@@ -15,10 +13,6 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
     private HashFunctor<K> hashFunc;
     private List<Element<K,V>>[] table;
     private int tableSize;
-
-    public ChainedHashTable(HashFactory<K> hashFactory) {
-        this(hashFactory, DEFAULT_INIT_CAPACITY, DEFAULT_MAX_LOAD_FACTOR);
-    }
 
     public ChainedHashTable(HashFactory<K> hashFactory, int k, double maxLoadFactor) {
         this.hashFactory = hashFactory;
@@ -84,10 +78,6 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
             }
         }
         return false;
-    }
-
-    public HashFunctor<K> getHashFunc() {
-        return hashFunc;
     }
 
     public int capacity() { return capacity; }

@@ -11,7 +11,7 @@
 - Not done here:
   - The branch is not merged or pushed.
   - Left for the production refactor: the one-argument table constructors build 16 slots, not 4
-    (step 6's log).
+    (step 6's log). Nothing called them; deleted as dead code on 2026-10-09 (`refactor/code-smells`).
 
 ## Context
 
