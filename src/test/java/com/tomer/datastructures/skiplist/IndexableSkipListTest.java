@@ -247,6 +247,14 @@ class IndexableSkipListTest {
         }
 
         @Test
+        @DisplayName("deleting null")
+        void nullNode() {
+            assertFalse(list.delete(null), "Deleting null is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting null");
+            assertEquals(5, list.size, "Size unchanged after deleting null");
+        }
+
+        @Test
         @DisplayName("deleting every element")
         void emptyingTheList() {
             deleteKey(30);

@@ -7,7 +7,7 @@
 Requires JDK 17 or newer. Maven is not required: the wrapper downloads it.
 
 ```bash
-./mvnw verify          # 148 tests, the coverage report, and the coverage floor
+./mvnw verify          # 149 tests, the coverage report, and the coverage floor
 ./mvnw -q exec:java    # the hashing experiments (Tasks 3.5-3.8): average timings per load factor
 ```
 
@@ -16,7 +16,7 @@ On Windows, use `mvnw.cmd` in place of `./mvnw`.
 CI runs the same `verify` on JDK 17, 21 and 25 for every push and pull request to `main`.
 
 `verify` writes the JaCoCo coverage report to `target/site/jacoco/index.html`, and fails the build
-if line coverage drops below 90%. Coverage is about 93% of lines. It can move by a line between
+if line coverage drops below 90%. Coverage is about 94% of lines. It can move by a line between
 runs, because one line, in rehashing, runs only when a random hash happens to collide two keys.
 
 The `experiments` package is left out of the report and the floor. It is benchmark code: its
