@@ -223,10 +223,10 @@ Files: the four hashing tests, `HashingUtilsTest` (new), `pom.xml`
 
 Files: `MyDataStructureTest`, `composite/MyDataStructure.java`
 
-- [ ] Write the failing test: elements 5, 15, 25, 35, 45; `range(5, Integer.MAX_VALUE)` ->
+- [x] Write the failing test: elements 5, 15, 25, 35, 45; `range(5, Integer.MAX_VALUE)` ->
       [5, 15, 25, 35, 45]
-- [ ] Run it and see it fail for the right reason: the extra 2147483647
-- [ ] Fix: stop the walk at the tail, the only level-0 node with no next
+- [x] Run it and see it fail for the right reason: the extra 2147483647
+- [x] Fix: stop the walk at the tail, the only level-0 node with no next
 
 **Verify (me):** `./mvnw verify` green, including the new test.
 **Verify (you):** nothing beyond the tests.
@@ -314,7 +314,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **4. Fix the audit findings in the existing tests** (2026-10-08)
 - [x] **5. Cover the skip list and MyDataStructure gaps** (2026-10-08)
 - [x] **6. Cover the hashing gaps and add the coverage floor** (2026-10-09)
-- [ ] **7. Fix: range() returns the tail sentinel**
+- [x] **7. Fix: range() returns the tail sentinel** (2026-10-09)
 - [ ] **8. Fix: multiplicative hash with k = 0 hashes out of range**
 - [ ] **9. Docs and memory sync**
 
@@ -465,3 +465,16 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
   - Noticed, not changed: both tables' one-argument constructors pass `DEFAULT_INIT_CAPACITY` (4)
     as k, which gives 16 slots, not 4. The spec names no default, and nothing calls them. Worth a
     look in the production refactor.
+- **2026-10-09:** Step 7 built.
+  - Test first. Both new tests failed on the old code with the tail's key added at the end:
+    - `range(5, Integer.MAX_VALUE)` returned `[5, 15, 25, 35, 45, 2147483647]`;
+    - with Integer.MAX_VALUE stored, `range(45, Integer.MAX_VALUE)` returned
+      `[45, 2147483647, 2147483647]`.
+  - Fix, in `MyDataStructure.range`: the loop now stops at the node with no level-0 next (the
+    tail). That replaces the `currentNode != null` check, which only became false after the tail
+    had already been added. The walk starts at a stored node and now stops at the tail, so the
+    node is never null.
+  - `./mvnw clean verify`: BUILD SUCCESS, 129 tests, 0 failures, coverage check met at 86.38%
+    (368/426).
+  - Choice the plan didn't settle: the second test, with Integer.MAX_VALUE stored as a value. It
+    rules out a fix that drops every key equal to Integer.MAX_VALUE, which would lose a real value.

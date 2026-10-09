@@ -245,6 +245,21 @@ class MyDataStructureTest {
         void highBelowLow() {
             assertEquals(List.of(), ds.range(25, 20), "Range(25, 20) should return []");
         }
+
+        @Test
+        @DisplayName("stops at the last value when high is Integer.MAX_VALUE")
+        void highIsMaxValue() {
+            assertEquals(List.of(5, 15, 25, 35, 45), ds.range(5, Integer.MAX_VALUE),
+                    "Range(5, Integer.MAX_VALUE) returns every value and nothing past the last");
+        }
+
+        @Test
+        @DisplayName("keeps a stored Integer.MAX_VALUE, once")
+        void storedMaxValue() {
+            ds.insert(Integer.MAX_VALUE);
+            assertEquals(List.of(45, Integer.MAX_VALUE), ds.range(45, Integer.MAX_VALUE),
+                    "Range(45, Integer.MAX_VALUE) returns 45 and the stored Integer.MAX_VALUE once");
+        }
     }
 
     @Nested
