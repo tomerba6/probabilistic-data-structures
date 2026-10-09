@@ -85,8 +85,15 @@ class MultiplicativeShiftingHashTest {
     }
 
     @Nested
-    @DisplayName("the largest k")
-    class LargestK {
+    @DisplayName("the edge values of k")
+    class EdgeValuesOfK {
+
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(longs = {0L, 42L, -1L, Long.MIN_VALUE, Long.MAX_VALUE})
+        @DisplayName("k = 0 hashes every key to 0, the only slot")
+        void kZero(long key) {
+            assertEquals(0, factory.pickHash(0).hash(key), "With k = 0, key " + key + " hashes to 0");
+        }
 
         @ParameterizedTest(name = "x = {0}")
         @ValueSource(longs = {0L, 42L, -1L, Long.MIN_VALUE, Long.MAX_VALUE})

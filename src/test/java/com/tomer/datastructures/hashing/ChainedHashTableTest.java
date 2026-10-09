@@ -122,6 +122,21 @@ class ChainedHashTableTest {
             assertTrue(table.capacity() >= 8, "Table successfully expanded its capacity during bulk insert");
             assertEquals("Value_5", table.search(5000L), "Search works accurately after rehashing");
         }
+
+        @Test
+        @DisplayName("starts from k = 0, a one-slot table, and grows from it")
+        void oneSlotTable() {
+            ChainedHashTable<Long, String> oneSlot = new ChainedHashTable<>(new MultiplicativeShiftingHash(), 0, 2.0);
+            assertEquals(1, oneSlot.capacity(), "Initial capacity is 1 (2^0)");
+
+            oneSlot.insert(100L, "OneHundred");
+            assertEquals("OneHundred", oneSlot.search(100L), "Search finds the key in the one-slot table");
+
+            oneSlot.insert(200L, "TwoHundred");
+            assertEquals(2, oneSlot.capacity(), "Capacity doubled to 2 on the insert that brought the load to 2/1 = 2.0");
+            assertEquals("OneHundred", oneSlot.search(100L), "Key 100 is found after growing from one slot");
+            assertEquals("TwoHundred", oneSlot.search(200L), "Key 200 is found after growing from one slot");
+        }
     }
 
     @Nested

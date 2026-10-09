@@ -236,10 +236,10 @@ Files: `MyDataStructureTest`, `composite/MyDataStructure.java`
 
 Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.java`
 
-- [ ] Write the failing test: `pickHash(0).hash(x)` == 0 for keys 0, 42, -1, Long.MIN_VALUE and
+- [x] Write the failing test: `pickHash(0).hash(x)` == 0 for keys 0, 42, -1, Long.MIN_VALUE and
       Long.MAX_VALUE. Plus a table built with k = 0 that inserts and finds keys.
-- [ ] Run it and see it fail for the right reason: Java treats `>>> 64` as `>>> 0`
-- [ ] Fix: k = 0 returns 0
+- [x] Run it and see it fail for the right reason: Java treats `>>> 64` as `>>> 0`
+- [x] Fix: k = 0 returns 0
 
 **Verify (me):** `./mvnw verify` green, including the new tests.
 **Verify (you):** nothing beyond the tests.
@@ -315,7 +315,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **5. Cover the skip list and MyDataStructure gaps** (2026-10-08)
 - [x] **6. Cover the hashing gaps and add the coverage floor** (2026-10-09)
 - [x] **7. Fix: range() returns the tail sentinel** (2026-10-09)
-- [ ] **8. Fix: multiplicative hash with k = 0 hashes out of range**
+- [x] **8. Fix: multiplicative hash with k = 0 hashes out of range** (2026-10-09)
 - [ ] **9. Docs and memory sync**
 
 ### Deviations
@@ -336,6 +336,8 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - **5:** `calculateExpectedHeight` is tested in a new `skiplist/SkipListUtilsTest`, not in
   `IndexableSkipListTest`: the test style is one test class per production class, and the method
   is on `SkipListUtils`.
+- **8:** The k = 0 table test is in `ChainedHashTableTest`, which the step's Files line doesn't
+  name, for the same reason: it tests the table.
 
 ### Session log
 
@@ -478,3 +480,16 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
     (368/426).
   - Choice the plan didn't settle: the second test, with Integer.MAX_VALUE stored as a value. It
     rules out a fix that drops every key equal to Integer.MAX_VALUE, which would lose a real value.
+- **2026-10-09:** Step 8 built.
+  - Test first, on the old code: `Tests run: 28, Failures: 3, Errors: 1`.
+    - `pickHash(0).hash(x)` returned the product's low 32 bits unshifted: -871675548 for 42,
+      1297364533 for -1, 970393525 for Long.MAX_VALUE.
+    - Keys 0 and Long.MIN_VALUE passed even before the fix: the low 32 bits of `a * key` are 0 for
+      both.
+    - The one-slot chained table threw `ArrayIndexOutOfBoundsException` (index -457211500, length
+      1) on its first insert.
+  - Fix, in `MultiplicativeShiftingHash.Functor.hash`: return 0 when k = 0.
+  - `./mvnw clean verify`: BUILD SUCCESS, 135 tests, 0 failures, coverage check met at 86.21%
+    (369/428; the fix added 2 lines).
+  - Choice the plan didn't settle: the table test uses load factor 2.0. Its second insert then
+    resizes from 1 slot to 2, so the test also covers growing out of a k = 0 table.

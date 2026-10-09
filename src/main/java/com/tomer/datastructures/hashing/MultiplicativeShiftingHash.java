@@ -28,6 +28,11 @@ public class MultiplicativeShiftingHash implements HashFactory<Long> {
         }
         @Override
         public int hash(Long key) {
+            // With k = 0 there is one slot. Java shifts a long by distance mod 64, so >>> 64 would
+            // not shift at all and would return the product's low bits instead.
+            if (k == 0) {
+                return 0;
+            }
             return (int)((a * key) >>> (WORD_SIZE - k));
         }
 
