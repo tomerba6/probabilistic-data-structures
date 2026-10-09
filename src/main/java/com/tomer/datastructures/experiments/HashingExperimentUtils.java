@@ -1,3 +1,12 @@
+package com.tomer.datastructures.experiments;
+
+import com.tomer.datastructures.hashing.ChainedHashTable;
+import com.tomer.datastructures.hashing.HashFactory;
+import com.tomer.datastructures.hashing.HashTable;
+import com.tomer.datastructures.hashing.HashingUtils;
+import com.tomer.datastructures.hashing.ModularHash;
+import com.tomer.datastructures.hashing.ProbingHashTable;
+
 public class HashingExperimentUtils {
     private static volatile long sink;
     final private static int k = 16;

@@ -1,3 +1,5 @@
+package com.tomer.datastructures.skiplist;
+
 public class IndexableSkipList extends AbstractSkipList {
     final protected double p;	// p is the probability for "success" in the geometric process generating the height of each node.
     public IndexableSkipList(double probability) {

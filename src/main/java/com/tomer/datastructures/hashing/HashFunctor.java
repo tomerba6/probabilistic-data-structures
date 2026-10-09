@@ -1,3 +1,5 @@
+package com.tomer.datastructures.hashing;
+
 public interface HashFunctor<K> {
     /***
      * @param key - A valid key of type K

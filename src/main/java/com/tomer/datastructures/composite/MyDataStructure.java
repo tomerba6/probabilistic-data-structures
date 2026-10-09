@@ -1,3 +1,10 @@
+package com.tomer.datastructures.composite;
+
+import com.tomer.datastructures.hashing.ChainedHashTable;
+import com.tomer.datastructures.hashing.ModularHash;
+import com.tomer.datastructures.skiplist.AbstractSkipList;
+import com.tomer.datastructures.skiplist.IndexableSkipList;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,7 +155,9 @@ public class MyDataStructure {
         }
 
         List<Integer> result = new ArrayList<>();
-        while (currentNode != null && currentNode.key() <= high) {
+        // Stop at the tail sentinel, the only level-0 node with no next. Its key is
+        // Integer.MAX_VALUE, so comparing keys alone would add it when high is that value.
+        while (currentNode.getNext(0) != null && currentNode.key() <= high) {
             result.add(currentNode.key());
             currentNode = currentNode.getNext(0);
         }

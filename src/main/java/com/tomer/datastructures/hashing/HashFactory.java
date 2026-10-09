@@ -1,3 +1,5 @@
+package com.tomer.datastructures.hashing;
+
 public interface HashFactory<K> {
     /**
      * @param capacity - The capacity of the hash table using the expected hash function.
