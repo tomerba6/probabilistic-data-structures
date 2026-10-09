@@ -243,4 +243,29 @@ class ProbingHashTableTest {
             assertEquals("Value_3", table.search(3), "Every live key is found after the resize (key 3)");
         }
     }
+
+    @Nested
+    @DisplayName("with every slot taken, so no empty slot ends a probe")
+    class WhenEverySlotIsTaken {
+
+        // k = 2 and key mod m as the hash: keys 0 to 3 fill slots 0 to 3. A probing table's load
+        // never reaches 2.0, so it never resizes.
+        private final ProbingHashTable<Integer, String> table =
+                new ProbingHashTable<>(new FixedHashFactory<>((key, m) -> Math.floorMod(key, m)), 2, 2.0);
+
+        @Test
+        @DisplayName("stops after one pass when searching for or deleting an absent key")
+        void absentKeyStopsAfterOnePass() {
+            for (int key = 0; key < 4; key++) {
+                table.insert(key, "Value_" + key);
+            }
+            assertEquals(4, table.capacity(), "Setup: the four keys fill all 4 slots without a resize");
+
+            // With no empty slot to stop at, only the one-pass bound keeps these from probing forever.
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                assertNull(table.search(4), "Search for an absent key returns null after visiting every slot");
+                assertFalse(table.delete(4), "Delete of an absent key returns false after visiting every slot");
+            });
+        }
+    }
 }
