@@ -1,5 +1,7 @@
 # probabilistic-data-structures
 
+[![CI](https://github.com/tomerba6/probabilistic-data-structures/actions/workflows/ci.yml/badge.svg)](https://github.com/tomerba6/probabilistic-data-structures/actions/workflows/ci.yml)
+
 ## Build and test
 
 Requires JDK 17 or newer. Maven is not required: the wrapper downloads it.
@@ -10,6 +12,8 @@ Requires JDK 17 or newer. Maven is not required: the wrapper downloads it.
 ```
 
 On Windows, use `mvnw.cmd` in place of `./mvnw`.
+
+CI runs the same `verify` on JDK 17, 21 and 25 for every push and pull request to `main`.
 
 `verify` writes the JaCoCo coverage report to `target/site/jacoco/index.html`, and fails the build
 if line coverage drops below 85%. Coverage is about 86% of lines. It can move by a line between
