@@ -1,6 +1,17 @@
 # JUnit test suite
 
-**Status:** active · **Branch:** `refactor/junit-tests` off `main` at `24aed09` · **Started:** 2026-10-07
+**Status:** done · **Branch:** `refactor/junit-tests` off `main` at `24aed09` · **Started:** 2026-10-07
+
+**Closed 2026-10-09.**
+- Results:
+  - The suite is 135 JUnit tests run by `./mvnw verify`, with a line-coverage floor of 85%
+    (about 86% measured, `experiments` excluded).
+  - Every planted bug, M1 to M5, fails the build in 5 of 5 runs.
+  - Both bugs the audit found are fixed test-first.
+- Not done here:
+  - The branch is not merged or pushed.
+  - Left for the production refactor: the one-argument table constructors build 16 slots, not 4
+    (step 6's log).
 
 ## Context
 
@@ -247,12 +258,13 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 
 ### 9. Docs and memory sync
 
-- [ ] README (now a one-line title in UTF-16): convert it to UTF-8 and add a "Build and test"
+- [x] README (now a one-line title in UTF-16): convert it to UTF-8 and add a "Build and test"
       section covering:
   - `./mvnw verify`, with the test count and coverage figure re-measured;
   - the report's path;
   - `./mvnw -q exec:java` for the experiments.
-- [ ] Memory: the project keeps none yet. Add one only for something the repo doesn't record.
+- [x] Memory: the project keeps none yet. Add one only for something the repo doesn't record.
+      (None added.)
 
 **Verify (me):** each changed claim checked against the code or a command
 **Verify (you):** read the diff
@@ -316,7 +328,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **6. Cover the hashing gaps and add the coverage floor** (2026-10-09)
 - [x] **7. Fix: range() returns the tail sentinel** (2026-10-09)
 - [x] **8. Fix: multiplicative hash with k = 0 hashes out of range** (2026-10-09)
-- [ ] **9. Docs and memory sync**
+- [x] **9. Docs and memory sync** (2026-10-09)
 
 ### Deviations
 
@@ -493,3 +505,26 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
     (369/428; the fix added 2 lines).
   - Choice the plan didn't settle: the table test uses load factor 2.0. Its second insert then
     resizes from 1 slot to 2, so the test also covers growing out of a k = 0 table.
+- **2026-10-09:** Step 9 built.
+  - README rewritten as UTF-8 (plain ASCII) with a "Build and test" section. `.gitattributes`
+    gets its `*.md text` line back, closing deviation 1. `git ls-files --eol` lists no other
+    non-text file.
+  - The first write kept the old UTF-16 encoding and dropped its byte-order mark, so the file was
+    unreadable. It was deleted and written fresh.
+  - Each README claim was checked:
+    - JDK 17: `maven.compiler.release` is 17 in the pom (not run on a JDK 17 here).
+    - "The wrapper downloads it": `distributionUrl` points at Maven 3.9.16. `mvnw.cmd` exists.
+    - `./mvnw clean verify`: 135 tests, 0 failures, coverage check met, 86.45% (370/428). It was
+      86.21% (369/428) after step 8; the one-line swing is `ProbingHashTable.java:81` (step 6).
+    - The report is at `target/site/jacoco/index.html`, and `experiments` does not appear in it.
+    - `./mvnw -q exec:java`: exit 0, average ns per load factor for Tasks 3.5 to 3.8.
+  - IntelliJ then showed the new README as gibberish.
+    - Cause: the git-ignored `.idea/encodings.xml` pinned `README.md` to UTF-16LE, a mapping left
+      over from the old file, so IntelliJ read the ASCII bytes in pairs. It then saved the file
+      back with a UTF-16 byte-order mark and a stray U+FFFD at the end.
+    - Fix: you removed the mapping in Settings > Editor > File Encodings, matching
+      dynamic-sets-implementation. The README was then deleted and written again: 821 bytes of
+      plain ASCII, no byte-order mark, ending in a newline.
+  - Memory: none added. Everything worth keeping is in this plan, the README or the code.
+  - Choice the plan didn't settle: the README states coverage as "about 86%", not a decimal, since
+    the figure moves by a line between runs.

@@ -12,3 +12,4 @@ mvnw.cmd text eol=crlf
 *.java text
 *.xml text
 *.yml text
+*.md text
