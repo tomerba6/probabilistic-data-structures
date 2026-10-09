@@ -100,12 +100,11 @@ public class HashingUtils {
     }
 
     /***
-     * Evaluates the power of x at y, done at modulo mod in an efficient matter,
-     * using the characteristics of modulo: (x * y) mod n = ((x mod n) * (y mod n)) mod n
-     * @param x - The basis
-     * @param y - The power
+     * Multiplies a by b at modulo mod, using BigInteger so the product cannot overflow a long.
+     * @param a - The first factor
+     * @param b - The second factor
      * @param mod - The intended modulo of the value
-     * @return (x ^ y) % mod
+     * @return (a * b) % mod
      */
     private static long multiplyMod(long a, long b, long mod) {
         final BigInteger aBig = BigInteger.valueOf(a);
@@ -116,6 +115,14 @@ public class HashingUtils {
         return multiplyRes.mod(modBig).longValue();
     }
 
+    /***
+     * Evaluates the power of a at b, done at modulo mod in an efficient manner,
+     * using the characteristics of modulo: (x * y) mod n = ((x mod n) * (y mod n)) mod n
+     * @param a - The basis
+     * @param b - The power
+     * @param mod - The intended modulo of the value
+     * @return (a ^ b) % mod
+     */
     private static long modPow(long a, long b, long mod) {
         final BigInteger aBig = BigInteger.valueOf(a);
         final BigInteger bBig = BigInteger.valueOf(b);

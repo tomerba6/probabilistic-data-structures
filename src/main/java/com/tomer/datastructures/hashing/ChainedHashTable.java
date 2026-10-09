@@ -16,10 +16,6 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
     private List<Element<K,V>>[] table;
     private int tableSize;
 
-    /*
-     * You should add additional private fields as needed.
-     */
-
     public ChainedHashTable(HashFactory<K> hashFactory) {
         this(hashFactory, DEFAULT_INIT_CAPACITY, DEFAULT_MAX_LOAD_FACTOR);
     }

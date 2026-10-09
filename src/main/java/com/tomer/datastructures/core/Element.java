@@ -59,7 +59,6 @@ public class Element<K,V> {
 	
 	public String toString() {
 		return "[" + this.key() + "]";
-		//return "[" + this.key() + ", " + this.satelliteData() + "]";
 	}
 	
 }
