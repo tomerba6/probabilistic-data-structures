@@ -33,6 +33,8 @@ From the interview (2026-10-07):
 3. **Bugs:** fix both in this plan, each in its own step: a failing test first, then the smallest fix.
 4. **Coverage:** a JaCoCo report on every `verify`, plus a floor (line coverage, rounded down to the
    nearest 5%) added after the gap tests.
+   - Asked in step 6 (2026-10-09): the `experiments` package is left out of both the report and
+     the floor. It is benchmark code, 0% covered by design, so benchmark edits can't fail the build.
 
 Defaults chosen without asking (approved with the plan):
 
@@ -196,17 +198,17 @@ Files: `IndexableSkipListTest`, `MyDataStructureTest`
 
 Files: the four hashing tests, `HashingUtilsTest` (new), `pom.xml`
 
-- [ ] Both tables: capacity doubles on exactly the insert that makes the load reach the maximum
+- [x] Both tables: capacity doubles on exactly the insert that makes the load reach the maximum
       (the spec's wording), not one insert before or after.
-- [ ] Probing:
+- [x] Probing:
   - a key hashed to the last slot wraps around to slot 0;
   - re-inserting reuses a DELETED slot;
   - on an empty table, `search` returns null and `delete` returns false.
-- [ ] Chained: delete one of three keys in a bucket.
-- [ ] `pickHash(30)` stays in range. `ModularHash.pickHash(0)` hashes to 0.
-- [ ] `genPrime`: 200 draws, all within bounds and passing `BigInteger.isProbablePrime(50)`.
-- [ ] `mod` with negatives, for both the `int` and `long` versions.
-- [ ] Add the JaCoCo `check` goal: BUNDLE line coverage minimum = measured value rounded down to the
+- [x] Chained: delete one of three keys in a bucket.
+- [x] `pickHash(30)` stays in range. `ModularHash.pickHash(0)` hashes to 0.
+- [x] `genPrime`: 200 draws, all within bounds and passing `BigInteger.isProbablePrime(50)`.
+- [x] `mod` with negatives, for both the `int` and `long` versions.
+- [x] Add the JaCoCo `check` goal: BUNDLE line coverage minimum = measured value rounded down to the
       nearest 5%.
 
 **Verify (me):**
@@ -311,7 +313,7 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
 - [x] **3. Move all 116 checks to JUnit** (2026-10-07)
 - [x] **4. Fix the audit findings in the existing tests** (2026-10-08)
 - [x] **5. Cover the skip list and MyDataStructure gaps** (2026-10-08)
-- [ ] **6. Cover the hashing gaps and add the coverage floor**
+- [x] **6. Cover the hashing gaps and add the coverage floor** (2026-10-09)
 - [ ] **7. Fix: range() returns the tail sentinel**
 - [ ] **8. Fix: multiplicative hash with k = 0 hashes out of range**
 - [ ] **9. Docs and memory sync**
@@ -428,3 +430,38 @@ Files: `MultiplicativeShiftingHashTest`, `hashing/MultiplicativeShiftingHash.jav
       keys below each one.
     - The emptying test first asserts that the 200 inserts raised the height above 0, so it can't
       pass without exercising the shrink. The chance of that setup failing is 2^-200.
+- **2026-10-09:** Step 6 built.
+  - `./mvnw clean verify`: BUILD SUCCESS, 127 tests (was 90), 0 failures. None of the 37 new
+    tests failed on the current code. The `genPrime` test takes 0.7 s.
+  - Coverage without `experiments` (your choice, see Decisions 4): 86.15% (367/426) on this run,
+    86.38% (368/426) on the run before.
+    - The difference is `ProbingHashTable.java:81`, the probe step while rehashing. It runs only
+      when the random hash happens to collide two keys in the new table.
+    - The 0.85 floor needs 363 covered lines, so there are 4 to 5 lines of slack.
+
+    | Package | Line coverage |
+    |---|---|
+    | composite | 100% (34/34) |
+    | hashing | 85.6% to 86.1% (166 to 167 of 194) |
+    | skiplist | 85.8% (145/169) |
+    | core | 75.9% (22/29) |
+
+  - Floor set to 1.00 in scratch: BUILD FAILURE with "Rule violated for bundle
+    probabilistic-data-structures: lines covered ratio is 0.86, but expected minimum is 1.00".
+  - Extra planted bug, beyond the plan: with insert no longer reusing DELETED cells,
+    `churnReusesDeletedCells` failed 5 of 5 ("execution timed out after 5000 ms"), and the build
+    still finished. `git diff src/main` was empty afterwards.
+  - Choices the plan didn't settle:
+    - "Re-inserting reuses a DELETED slot" is tested by its effect, since the table's slots are
+      private: 100 insert-delete cycles in one 8-slot chain. Without reuse the ninth insert probes
+      forever, so the loop runs under `assertTimeoutPreemptively` (5 s) to fail instead of hang.
+    - The two load-boundary tests sit in the existing ModularHash groups; the hash doesn't affect
+      capacity.
+    - `genPrime` is drawn at ModularHash's bounds, [Integer.MAX_VALUE, Long.MAX_VALUE]. `genLong`
+      samples by rejection from all longs, so a narrow range would practically never finish.
+    - The `mod` expected values were computed independently (Python's floor modulo).
+    - The JaCoCo excludes are set at plugin level, so the agent also skips instrumenting
+      `experiments`.
+  - Noticed, not changed: both tables' one-argument constructors pass `DEFAULT_INIT_CAPACITY` (4)
+    as k, which gives 16 slots, not 4. The spec names no default, and nothing calls them. Worth a
+    look in the production refactor.

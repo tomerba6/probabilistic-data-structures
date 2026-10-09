@@ -4,8 +4,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("ProbingHashTable (Task 3.4)")
@@ -27,6 +31,24 @@ class ProbingHashTableTest {
         @DisplayName("starts with capacity 2^k")
         void initialCapacity() {
             assertEquals(4, table.capacity(), "Initial capacity is correctly set to 4 (2^2)");
+        }
+
+        @Test
+        @DisplayName("misses every key while empty")
+        void emptyTable() {
+            assertNull(table.search(10), "Search on an empty table returns null");
+            assertFalse(table.delete(10), "Delete on an empty table returns false");
+        }
+
+        @Test
+        @DisplayName("doubles on exactly the insert that brings the load to the maximum")
+        void doublesWhenTheLoadReachesTheMaximum() {
+            table.insert(10, "Value_10");
+            table.insert(20, "Value_20");
+            assertEquals(4, table.capacity(), "Capacity is still 4 at load 2/4, below 0.75");
+
+            table.insert(30, "Value_30");
+            assertEquals(8, table.capacity(), "Capacity doubled to 8 on the insert that brought the load to 3/4 = 0.75");
         }
 
         @Test
@@ -154,6 +176,42 @@ class ProbingHashTableTest {
             table.delete(20);
             table.insert(40, "Value_40");
             assertEquals("Value_40", table.search(40), "Insert successfully functions when table contains DELETED cells");
+        }
+
+        @Test
+        @DisplayName("reuses DELETED cells, so insert-delete churn never fills the table")
+        void churnReusesDeletedCells() {
+            // Without reuse, each cycle would leave one more DELETED cell in the chain. The ninth
+            // insert would then find no free cell among the 8 and probe forever.
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                for (int key = 1; key <= 100; key++) {
+                    table.insert(key, "Value_" + key);
+                    assertEquals("Value_" + key, table.search(key), "Key " + key + " is found after its insert");
+                    assertTrue(table.delete(key), "Key " + key + " is deleted again");
+                }
+            });
+            assertEquals(8, table.capacity(), "Capacity stays 8: at most one key is ever live");
+        }
+    }
+
+    @Nested
+    @DisplayName("with every key hashed to the last slot")
+    class WhenEveryKeyHashesToTheLastSlot {
+
+        // k = 3: the last slot is 7, so the second key wraps around to slot 0.
+        private final ProbingHashTable<Integer, String> table =
+                new ProbingHashTable<>(new FixedHashFactory<>((key, m) -> m - 1), 3, 0.75);
+
+        @Test
+        @DisplayName("wraps around to slot 0 to insert, search and delete")
+        void wrapsAround() {
+            table.insert(10, "Value_10");
+            table.insert(20, "Value_20");
+
+            assertEquals("Value_20", table.search(20), "Key 20 is found after wrapping from slot 7 to slot 0");
+            assertNull(table.search(99), "Search for an absent key wraps around and stops at the empty slot 1");
+            assertTrue(table.delete(20), "Delete wraps around to find key 20 in slot 0");
+            assertNull(table.search(20), "Key 20 is no longer found after deletion");
         }
     }
 

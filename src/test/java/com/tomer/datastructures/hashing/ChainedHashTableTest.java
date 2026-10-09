@@ -31,6 +31,18 @@ class ChainedHashTableTest {
         }
 
         @Test
+        @DisplayName("doubles on exactly the insert that brings the load to the maximum")
+        void doublesWhenTheLoadReachesTheMaximum() {
+            for (int key = 1; key <= 5; key++) {
+                table.insert(key, "Value_" + key);
+            }
+            assertEquals(4, table.capacity(), "Capacity is still 4 at load 5/4, below 1.5");
+
+            table.insert(6, "Value_6");
+            assertEquals(8, table.capacity(), "Capacity doubled to 8 on the insert that brought the load to 6/4 = 1.5");
+        }
+
+        @Test
         @DisplayName("finds inserted keys and misses absent ones")
         void search() {
             insertTenTwentyThirty();
@@ -109,6 +121,27 @@ class ChainedHashTableTest {
 
             assertTrue(table.capacity() >= 8, "Table successfully expanded its capacity during bulk insert");
             assertEquals("Value_5", table.search(5000L), "Search works accurately after rehashing");
+        }
+    }
+
+    @Nested
+    @DisplayName("with every key hashed to bucket 0")
+    class WhenEveryKeyCollides {
+
+        private final ChainedHashTable<Integer, String> table =
+                new ChainedHashTable<>(new FixedHashFactory<>((key, m) -> 0), 2, 1.5);
+
+        @Test
+        @DisplayName("deletes one of three keys in a bucket and keeps the other two")
+        void deleteFromASharedBucket() {
+            table.insert(10, "A");
+            table.insert(20, "B");
+            table.insert(30, "C");
+
+            assertTrue(table.delete(20), "Delete removes key 20 from the shared bucket");
+            assertNull(table.search(20), "Key 20 is no longer found");
+            assertEquals("A", table.search(10), "Key 10 is still found in the shared bucket");
+            assertEquals("C", table.search(30), "Key 30 is still found in the shared bucket");
         }
     }
 }

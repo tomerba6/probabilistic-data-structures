@@ -85,4 +85,24 @@ class ModularHashTest {
             assertTrue(hash3 >= 0 && hash3 < m, "Hash result for very large key is a valid array index [0, m-1]");
         }
     }
+
+    @Nested
+    @DisplayName("the edge values of k")
+    class EdgeValuesOfK {
+
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(ints = {0, 42, -1, Integer.MIN_VALUE, Integer.MAX_VALUE})
+        @DisplayName("k = 0 hashes every key to 0, the only slot")
+        void kZero(int key) {
+            assertEquals(0, factory.pickHash(0).hash(key), "With k = 0, key " + key + " hashes to 0");
+        }
+
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(ints = {0, 42, -1, Integer.MIN_VALUE, Integer.MAX_VALUE})
+        @DisplayName("k = 30 hashes into [0, 2^30)")
+        void kThirty(int key) {
+            int hash = factory.pickHash(30).hash(key);
+            assertTrue(hash >= 0 && hash < (1 << 30), "With k = 30, key " + key + " hashes into [0, 2^30), got " + hash);
+        }
+    }
 }

@@ -83,4 +83,17 @@ class MultiplicativeShiftingHashTest {
             assertEquals(0, hash4, "Hash result for key 0 is always 0");
         }
     }
+
+    @Nested
+    @DisplayName("the largest k")
+    class LargestK {
+
+        @ParameterizedTest(name = "x = {0}")
+        @ValueSource(longs = {0L, 42L, -1L, Long.MIN_VALUE, Long.MAX_VALUE})
+        @DisplayName("k = 30 hashes into [0, 2^30)")
+        void kThirty(long key) {
+            int hash = factory.pickHash(30).hash(key);
+            assertTrue(hash >= 0 && hash < (1 << 30), "With k = 30, key " + key + " hashes into [0, 2^30), got " + hash);
+        }
+    }
 }
