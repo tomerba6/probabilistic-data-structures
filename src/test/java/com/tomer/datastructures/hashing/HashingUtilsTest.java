@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("HashingUtils")
@@ -57,6 +58,14 @@ class HashingUtilsTest {
         void oneBase(long suspect, long base, boolean expected) {
             assertEquals(expected, HashingUtils.passesMillerRabin(suspect, base),
                     suspect + " with base " + base + " passes: " + expected);
+        }
+
+        @Test
+        @DisplayName("fails when any base exposes the suspect, not only the last one")
+        void witnessBeforeALiar() {
+            // Base 3 exposes 2047 and base 2 cannot, so 2047 fails in either order.
+            assertFalse(HashingUtils.passesMillerRabin(2047, 2, 3), "2047 with bases 2 then 3 fails");
+            assertFalse(HashingUtils.passesMillerRabin(2047, 3, 2), "2047 with bases 3 then 2 fails");
         }
     }
 
