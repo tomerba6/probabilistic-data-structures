@@ -7,7 +7,7 @@
 Requires JDK 17 or newer. Maven is not required: the wrapper downloads it.
 
 ```bash
-./mvnw verify          # 171 tests, the test and coverage reports, and the coverage floor
+./mvnw verify          # 171 tests, the test and coverage reports, the coverage floor, and the doc check
 ./mvnw -q exec:java    # the hashing experiments (Tasks 3.5-3.8): average timings per load factor
 ```
 
@@ -27,3 +27,7 @@ runs, because one line, in rehashing, runs only when a random hash happens to co
 
 The `experiments` package is left out of the report and the floor. It is benchmark code: its
 timings are printed for reading, not asserted, so no test runs it.
+
+`verify` also checks the doc comments: javadoc fails the build when a public or protected declaration
+has no doc comment, or has one it cannot parse, such as an unescaped `<`. The API docs it writes land
+in `target/reports/apidocs/index.html`.
