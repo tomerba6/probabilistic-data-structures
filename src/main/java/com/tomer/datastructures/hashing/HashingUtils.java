@@ -118,14 +118,29 @@ public class HashingUtils {
      * @return True if suspect is probably prime with a false positive p of 4^(-rounds)
      */
     private boolean runMillerRabinTest(long suspect, int rounds) {
+        long[] bases = new long[rounds];
+        for (int i = 0; i < rounds; ++i) {
+            bases[i] = genLong(2L, suspect - 1);
+        }
+
+        return passesMillerRabin(suspect, bases);
+    }
+
+    /**
+     * Runs one round of the Miller-Rabin test per base. The caller picks the bases, so the test can be
+     * checked against known values.
+     * @param suspect - The number suspected of being prime, assuming suspect isn't even.
+     * @param bases - The bases to test with, each in [2, suspect - 1].
+     * @return True if suspect passes the test with these bases
+     */
+    static boolean passesMillerRabin(long suspect, long... bases) {
         Pair<Integer, Long> split = calculateEvenDivisorSplit(suspect - 1);
         final int s = split.first();
         final long d = split.second();
 
         long y = 1;
 
-        for (int i = 0; i < rounds; ++i) {
-            final long a = genLong(2L, suspect - 1);
+        for (long a : bases) {
             long x = modPow(a, d, suspect);
 
             for (int j = 0; j < s; ++j) {
