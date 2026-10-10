@@ -1,6 +1,8 @@
 # probabilistic-data-structures
 
 [![CI](https://github.com/tomerba6/probabilistic-data-structures/actions/workflows/ci.yml/badge.svg)](https://github.com/tomerba6/probabilistic-data-structures/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/tomerba6/probabilistic-data-structures)](LICENSE)
+[![Java](https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftomerba6%2Fprobabilistic-data-structures%2Fmain%2Fpom.xml&query=%2F%2F*%5Blocal-name%28%29%3D%27maven.compiler.release%27%5D&label=Java&suffix=%2B&logo=openjdk&color=orange)](pom.xml)
 
 Randomized data structures in Java: a skip list that answers rank and select, two hash tables whose
 hash functions are drawn at random, and a structure that combines them.
