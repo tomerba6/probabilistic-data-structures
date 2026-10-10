@@ -4,12 +4,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("MyDataStructure (Task 4.1)")
@@ -192,6 +195,14 @@ class MyDataStructureTest {
             assertEquals(10, ds.select(0), "Select index 0 should be 10");
             assertEquals(30, ds.select(2), "Select index 2 should be 30");
             assertEquals(50, ds.select(4), "Select index 4 should be 50");
+        }
+
+        @ParameterizedTest(name = "index = {0}")
+        @ValueSource(ints = {-1, 5, 6})
+        @DisplayName("select throws for an index outside 0 to size - 1")
+        void selectOutOfRange(int index) {
+            assertThrows(IndexOutOfBoundsException.class, () -> ds.select(index),
+                    "Select index " + index + " on 5 values throws IndexOutOfBoundsException");
         }
     }
 

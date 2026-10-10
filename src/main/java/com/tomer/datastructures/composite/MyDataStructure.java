@@ -127,6 +127,7 @@ public class MyDataStructure {
      *
      * @param index the index to select.
      * @return the value at the given index.
+     * @throws IndexOutOfBoundsException if index is negative or not less than DS.size.
      */
     public int select(int index) {
         return skipList.select(index);

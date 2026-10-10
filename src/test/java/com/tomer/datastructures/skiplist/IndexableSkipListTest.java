@@ -330,6 +330,22 @@ class IndexableSkipListTest {
             assertEquals(25, list.select(2), "Select(2) dynamically shifts to 25 after insertion");
             assertEquals(40, list.select(3), "Select(3) shifts back to 40");
         }
+
+        @ParameterizedTest(name = "index = {0}")
+        @ValueSource(ints = {-1, 5, 6})
+        @DisplayName("throws for an index outside 0 to size - 1")
+        void indexOutOfRange(int index) {
+            assertThrows(IndexOutOfBoundsException.class, () -> list.select(index),
+                    "Select(" + index + ") on 5 elements throws IndexOutOfBoundsException");
+        }
+
+        @Test
+        @DisplayName("throws on an empty list")
+        void emptyList() {
+            IndexableSkipList empty = new IndexableSkipList(0.5);
+            assertThrows(IndexOutOfBoundsException.class, () -> empty.select(0),
+                    "Select(0) on an empty list throws IndexOutOfBoundsException");
+        }
     }
 
     @Nested
