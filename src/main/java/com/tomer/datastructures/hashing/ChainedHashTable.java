@@ -6,6 +6,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 
+/**
+ * A {@link HashTable} that resolves collisions by chaining: each of its m = 2^k slots holds a linked
+ * list of the entries hashed there. Insert appends to the key's list without searching it, so it takes
+ * constant time apart from the inserts that double the table, which move every entry. Search and
+ * delete walk the key's list, so their cost is that list's length: about the load (entries per slot)
+ * when the hash spreads keys evenly. The load may go above 1.
+ *
+ * @param <K> The type of the keys.
+ * @param <V> The type of the values.
+ */
 public class ChainedHashTable<K, V> implements HashTable<K, V> {
     final private HashFactory<K> hashFactory;
     final private double maxLoadFactor;
@@ -15,6 +25,15 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
     private List<Element<K,V>>[] table;
     private int tableSize;
 
+    /**
+     * Creates an empty table with 2^k slots and draws its first hash function.
+     *
+     * @param hashFactory - Draws the table's hash function now and a new one each time it grows.
+     * @param k - The table starts with 2^k slots, with {@code 0 <= k <= MAX_K}.
+     * @param maxLoadFactor - When an insert would bring the load (entries per slot) to this value, the
+     *                        table doubles first. Must be positive; it may be above 1.
+     * @throws IllegalArgumentException - If k is negative or above {@link HashFactory#MAX_K}.
+     */
     public ChainedHashTable(HashFactory<K> hashFactory, int k, double maxLoadFactor) {
         this.hashFactory = hashFactory;
         this.maxLoadFactor = maxLoadFactor;

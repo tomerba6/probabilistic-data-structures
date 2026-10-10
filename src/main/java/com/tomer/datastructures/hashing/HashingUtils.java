@@ -7,6 +7,11 @@ import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/**
+ * Random numbers and modular arithmetic for the hash functions: random longs and primes in a range,
+ * distinct random integers, and a remainder that is never negative. Each instance draws from its own
+ * {@link Random}.
+ */
 public class HashingUtils {
     // Rounds of the Miller-Rabin test that genPrime runs on each candidate. A composite passes all of
     // them with probability at most 4^-rounds.
@@ -14,16 +19,36 @@ public class HashingUtils {
 
     final private Random rand;
 
+    /**
+     * Creates an instance seeded with the current time in milliseconds, so two instances made in the
+     * same millisecond produce the same numbers.
+     */
     public HashingUtils() {
         rand = new Random(System.currentTimeMillis()); // Using current time as the random seed
     }
 
+    /**
+     * Returns x modulo m, in [0, m), where {@code x % m} would be negative for a negative x.
+     *
+     * @param x - The value to reduce; any long.
+     * @param m - The modulus. Must be positive: with a negative m the result can fall outside [0, |m|).
+     * @return x mod m, in [0, m).
+     * @throws ArithmeticException - If m is 0.
+     */
     public static long mod(long x, long m) {
         long res = x % m;
 
         return (res < 0) ? res + m : res;
     }
 
+    /**
+     * Returns x modulo m, in [0, m), where {@code x % m} would be negative for a negative x.
+     *
+     * @param x - The value to reduce; any int.
+     * @param m - The modulus. Must be positive: with a negative m the result can fall outside [0, |m|).
+     * @return x mod m, in [0, m).
+     * @throws ArithmeticException - If m is 0.
+     */
     public static int mod(int x, int m) {
         int res = x % m;
 
@@ -32,6 +57,10 @@ public class HashingUtils {
 
     /***
      * Generates random prime in the range [lower, higher].
+     * It draws odd candidates with genLong until one passes MILLER_RABIN_ROUNDS rounds of the
+     * Miller-Rabin test, so it returns a composite with probability at most 4^-50, and never 2. The
+     * range must be wide and must not contain numbers below 3: genLong is slow on a narrow range, and
+     * a candidate below 3 leaves no base to test with, so it never returns.
      * @param lower - a lower bound for the returned value
      * @param higher - an upper bound for the returned value
      * @return a random prime, between lower and higher
@@ -46,6 +75,9 @@ public class HashingUtils {
 
     /***
      * Generates random long values until getting a value in the range [lower, higher].
+     * Each draw lands in the range with probability (higher - lower + 1) / 2^64, so the expected number
+     * of draws is 2^64 divided by the size of the range: a few for the ranges the hash functions use,
+     * but far too many for a narrow range. If lower is above higher, it never returns.
      * @param lower - a lower bound for the returned value
      * @param higher - an upper bound for the returned value
      * @return a random long, between lower and higher
@@ -57,6 +89,13 @@ public class HashingUtils {
         return value;
     }
 
+    /**
+     * Draws distinct integers uniformly from [0, Integer.MAX_VALUE), in the order they were drawn.
+     *
+     * @param numOfItemsToGen - How many to draw; 0 gives an empty array.
+     * @return numOfItemsToGen distinct integers.
+     * @throws IllegalArgumentException - If numOfItemsToGen is negative.
+     */
     public Integer[] genUniqueIntegers(int numOfItemsToGen) {
         return Stream.generate(() -> rand.ints(0, Integer.MAX_VALUE))
                 .flatMap(IntStream::boxed)
@@ -65,6 +104,7 @@ public class HashingUtils {
                 .toArray(Integer[]::new);
     }
 
+    // Splits num into 2^s * d with d odd, and returns (s, d). num must not be 0: it would never become odd.
     private static Pair<Integer, Long> calculateEvenDivisorSplit(long num) {
         int s = 0;
         while ((num & 1) == 0) {

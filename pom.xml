@@ -27,6 +27,7 @@
         <surefire.plugin.version>3.6.0</surefire.plugin.version>
         <jacoco.plugin.version>0.8.15</jacoco.plugin.version>
         <exec.plugin.version>3.6.4</exec.plugin.version>
+        <javadoc.plugin.version>3.12.0</javadoc.plugin.version>
     </properties>
 
     <dependencies>
@@ -125,6 +126,31 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Checks the doc comments on every `verify`: a missing or broken comment on a public or
+                protected declaration fails the build. Declared after JaCoCo so the test and coverage
+                reports are still written when only the docs fail.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${javadoc.plugin.version}</version>
+                <configuration>
+                    <doclint>all</doclint>
+                    <failOnWarnings>true</failOnWarnings>
+                    <quiet>true</quiet>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>doc-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>javadoc-no-fork</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

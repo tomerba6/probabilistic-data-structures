@@ -14,6 +14,8 @@ import java.util.List;
  * It combines an {@code IndexableSkipList} for expected Theta(log n) rank, select,
  * and sequential range queries, with a {@code ChainedHashTable} for expected
  * Theta(1) contains queries and direct node access to prevent redundant searches.
+ * It holds at most N distinct values, N being set by the constructor, and the skip list and the hash
+ * table always hold the same values.
  */
 public class MyDataStructure {
     private static final double SKIP_LIST_PROBABILITY = 0.5;
@@ -112,7 +114,7 @@ public class MyDataStructure {
     }
 
     /**
-     * Returns the number of items in the DS that are strictly less than val.
+     * Returns the number of items in the DS that are strictly less than value.
      * It delegates the operation to the IndexableSkipList, which uses the
      * maintained sizes of sub-lists in its links to compute the rank.
      * Time Complexity: Traversing the IndexableSkipList based on link sizes
@@ -126,7 +128,7 @@ public class MyDataStructure {
     }
 
     /**
-     * Returns the item at the specified index (0 <= index <= DS.size - 1).
+     * Returns the item at the specified index ({@code 0 <= index <= DS.size - 1}).
      * It delegates the operation to the IndexableSkipList, which traverses
      * its levels using the recorded link sizes to locate the i-th element.
      * Time Complexity: The SkipList performs this search by traversing down
@@ -142,6 +144,7 @@ public class MyDataStructure {
 
     /**
      * Returns a list of items between low and high in ascending order.
+     * Both bounds are inclusive; if high is below low, the list is empty.
      * Uses the hash table to find the 'low' node in expected Theta(1) time.
      * Then traverses the bottom level (level 0) of the SkipList to collect items.
      * Time Complexity: Theta(1) for lookup, and iterating through level 0 touches

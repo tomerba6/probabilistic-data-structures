@@ -10,6 +10,15 @@ import java.util.Locale;
  * for each load factor. Run with {@code mvnw -q exec:java}.
  */
 public class HashingExperiments {
+    private HashingExperiments() {
+    }
+
+    /**
+     * Runs the four experiments in turn and prints a table for each: every load factor with the
+     * average nanoseconds per operation.
+     *
+     * @param args not used
+     */
     public static void main(String[] args) {
         System.out.println("\n=======================================================");
         System.out.println("   RUNNING HASHING EXPERIMENTS (Tasks 3.5 - 3.8)");
