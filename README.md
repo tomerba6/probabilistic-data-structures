@@ -7,7 +7,7 @@
 Requires JDK 17 or newer. Maven is not required: the wrapper downloads it.
 
 ```bash
-./mvnw verify          # 179 tests, the test and coverage reports, the coverage floor, and the doc check
+./mvnw verify          # 187 tests, the test and coverage reports, the coverage floor, and the doc check
 ./mvnw -q exec:java    # the hashing experiments (Tasks 3.5-3.8): average timings per load factor
 ```
 

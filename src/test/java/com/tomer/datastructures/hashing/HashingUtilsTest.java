@@ -5,11 +5,17 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigInteger;
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("HashingUtils")
@@ -23,8 +29,7 @@ class HashingUtilsTest {
         @DisplayName("draws primes within its bounds")
         void primesWithinBounds() {
             HashingUtils utils = new HashingUtils();
-            // The bounds ModularHash draws p from. genLong samples by rejection, so a narrow range
-            // would take too many draws to finish.
+            // The bounds ModularHash draws p from.
             long lower = Integer.MAX_VALUE;
             long higher = Long.MAX_VALUE;
 
@@ -35,6 +40,86 @@ class HashingUtilsTest {
                 assertTrue(BigInteger.valueOf(prime).isProbablePrime(50),
                         "Draw " + draw + " (" + prime + ") is prime");
             }
+        }
+
+        // The narrow-range tests run under a timeout: genPrime used to draw by rejection from every long,
+        // so a narrow range never finished.
+        @Test
+        @DisplayName("draws primes from a small range")
+        void smallRange() {
+            HashingUtils utils = new HashingUtils();
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                for (int draw = 1; draw <= 100; draw++) {
+                    long prime = utils.genPrime(3, 100);
+                    assertTrue(prime >= 3 && prime <= 100, "Draw " + draw + " (" + prime + ") is within [3, 100]");
+                    assertTrue(BigInteger.valueOf(prime).isProbablePrime(50), "Draw " + draw + " (" + prime + ") is prime");
+                }
+            });
+        }
+
+        @ParameterizedTest(name = "lower = {0}")
+        @ValueSource(longs = {2, 0, -10})
+        @DisplayName("rejects a range starting below 3")
+        void lowerBelowThree(long lower) {
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+                    assertThrows(IllegalArgumentException.class, () -> new HashingUtils().genPrime(lower, 100),
+                            "genPrime(" + lower + ", 100) is rejected"));
+        }
+    }
+
+    @Nested
+    @DisplayName("genLong")
+    class GenLong {
+
+        // Each test runs under a timeout: genLong used to draw by rejection from every long, so a
+        // narrow range never finished.
+        @Test
+        @DisplayName("draws every value of a small range, and nothing outside it")
+        void smallRange() {
+            HashingUtils utils = new HashingUtils();
+            Set<Long> seen = new HashSet<>();
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                for (int draw = 0; draw < 1000; draw++) {
+                    long value = utils.genLong(5, 10);
+                    assertTrue(value >= 5 && value <= 10, "Draw " + value + " is within [5, 10]");
+                    seen.add(value);
+                }
+            });
+            assertEquals(6, seen.size(), "All six values from 5 to 10 were drawn");
+        }
+
+        @Test
+        @DisplayName("includes Long.MAX_VALUE when the range ends there")
+        void rangeEndingAtMaxValue() {
+            HashingUtils utils = new HashingUtils();
+            Set<Long> seen = new HashSet<>();
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+                for (int draw = 0; draw < 1000; draw++) {
+                    seen.add(utils.genLong(Long.MAX_VALUE - 1, Long.MAX_VALUE));
+                }
+            });
+            assertEquals(Set.of(Long.MAX_VALUE - 1, Long.MAX_VALUE), seen, "Both values of the range were drawn");
+        }
+
+        @Test
+        @DisplayName("draws from the whole long range")
+        void wholeRange() {
+            HashingUtils utils = new HashingUtils();
+            boolean negative = false, positive = false;
+            for (int draw = 0; draw < 1000; draw++) {
+                long value = utils.genLong(Long.MIN_VALUE, Long.MAX_VALUE);
+                negative |= value < 0;
+                positive |= value > 0;
+            }
+            assertTrue(negative && positive, "1000 draws over every long include negative and positive values");
+        }
+
+        @Test
+        @DisplayName("rejects a lower bound above the upper bound")
+        void lowerAboveHigher() {
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+                    assertThrows(IllegalArgumentException.class, () -> new HashingUtils().genLong(10, 5),
+                            "genLong(10, 5) is rejected"));
         }
     }
 
