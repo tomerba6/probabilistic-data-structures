@@ -195,6 +195,24 @@ class IndexableSkipListTest {
                 currentExpectedProb = currentExpectedProb * (1 - p);
             }
         }
+
+        @Test
+        @DisplayName("accepts p = 1, where every node has height 0")
+        void probabilityOne() {
+            IndexableSkipList flat = new IndexableSkipList(1.0);
+            for (int i = 0; i < 100; i++) {
+                assertEquals(0, flat.generateHeight(), "With p = 1 every height is 0");
+            }
+        }
+
+        // At p = 0 or below the height loop never ends, so the list rejects such a p when it is built.
+        @ParameterizedTest(name = "p = {0}")
+        @ValueSource(doubles = {0.0, -0.5, 1.5, Double.NaN})
+        @DisplayName("rejects a p outside (0, 1]")
+        void probabilityOutOfRange(double p) {
+            assertThrows(IllegalArgumentException.class, () -> new IndexableSkipList(p),
+                    "IndexableSkipList(" + p + ") is rejected");
+        }
     }
 
     @Nested

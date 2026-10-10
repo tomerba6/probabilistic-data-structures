@@ -13,11 +13,15 @@ public class IndexableSkipList extends AbstractSkipList {
     /**
      * Creates an empty list whose nodes stop growing with probability p at each level.
      *
-     * @param probability p, in (0, 1]. At 0 or below the first insert never returns; at 1 every node
-     *                    has height 0, so the list has a single level.
+     * @param probability p, in (0, 1]. At 1 every node has height 0, so the list has a single level.
+     * @throws IllegalArgumentException if probability is not in (0, 1], NaN included
      */
     public IndexableSkipList(double probability) {
         super();
+        // Written so NaN fails too. At 0 or below, generateHeight would never stop adding levels.
+        if (!(probability > 0 && probability <= 1)) {
+            throw new IllegalArgumentException("p must be above 0 and at most 1. Received: " + probability);
+        }
         this.p = probability;
     }
 
