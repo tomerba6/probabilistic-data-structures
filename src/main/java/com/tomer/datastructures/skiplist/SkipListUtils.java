@@ -4,6 +4,9 @@ package com.tomer.datastructures.skiplist;
  * Formulas about skip lists.
  */
 public class SkipListUtils {
+    private SkipListUtils() {
+    }
+
     /**
      * Returns the expected height of a node whose height is drawn as in
      * {@link IndexableSkipList#generateHeight}: (1 - p) / p, the mean of the geometric distribution

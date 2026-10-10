@@ -73,6 +73,9 @@ public class HashingExperimentUtils {
         }
     }
 
+    private HashingExperimentUtils() {
+    }
+
     // ==========================================
     // Public API Methods (Tasks 3.5 - 3.8)
     // ==========================================
