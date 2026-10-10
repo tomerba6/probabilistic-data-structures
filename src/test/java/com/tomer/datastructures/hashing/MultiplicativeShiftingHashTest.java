@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.math.BigInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,6 +56,18 @@ class MultiplicativeShiftingHashTest {
         void parameters() {
             assertTrue(functor.a() > 1, "Parameter 'a' is strictly greater than 1");
             assertEquals(k, functor.k(), "Parameter 'k' is stored correctly");
+        }
+
+        // With an even a, a * 2^63 wraps around to 0 in 64 bits, so x and x + 2^63 always share a slot.
+        // With an odd a their products differ in the top bit only, so for k >= 1 they never do.
+        @Test
+        @DisplayName("separates keys x and x + 2^63 with every function drawn")
+        void keysTwoToTheSixtyThreeApart() {
+            for (int draw = 1; draw <= 1000; draw++) {
+                HashFunctor<Long> hash = factory.pickHash(k);
+                assertNotEquals(hash.hash(5L), hash.hash(5L + Long.MIN_VALUE),
+                        "Draw " + draw + ": keys 5 and 5 + 2^63 share a slot");
+            }
         }
 
         @ParameterizedTest(name = "x = {0}")

@@ -29,8 +29,9 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
      * @param hashFactory - Draws the table's hash function now and a new one each time it grows.
      * @param k - The table starts with 2^k slots, with {@code 0 <= k <= MAX_K}.
      * @param maxLoadFactor - When an insert would bring the load (entries per slot) to this value, the
-     *                        table doubles first. Should be in (0, 1]: above 1 the table can fill every
-     *                        slot, and an insert into a full table never returns.
+     *                        table doubles first; it also doubles when an insert finds every slot full.
+     *                        Must be positive. The load of a probing table cannot pass 1, so a value
+     *                        above 1 means the table grows only when full.
      * @throws IllegalArgumentException - If k is negative or above {@link HashFactory#MAX_K}.
      */
     public ProbingHashTable(HashFactory<K> hashFactory, int k, double maxLoadFactor) {
@@ -50,7 +51,10 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
     }
 
     public void insert(K key, V value) {
-        if ((double) (this.tableSize + 1) / this.capacity >= this.maxLoadFactor) {
+        // A full table grows whatever the max load factor: the probe below stops only at an empty or
+        // deleted slot, and a full table has none.
+        if (this.tableSize == this.capacity
+                || (double) (this.tableSize + 1) / this.capacity >= this.maxLoadFactor) {
             rehashTable();
         }
 

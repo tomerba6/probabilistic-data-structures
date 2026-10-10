@@ -249,7 +249,7 @@ class ProbingHashTableTest {
     class WhenEverySlotIsTaken {
 
         // k = 2 and key mod m as the hash: keys 0 to 3 fill slots 0 to 3. A probing table's load
-        // never reaches 2.0, so it never resizes.
+        // never reaches 2.0, so it grows only when an insert finds it full.
         private final ProbingHashTable<Integer, String> table =
                 new ProbingHashTable<>(new FixedHashFactory<>((key, m) -> Math.floorMod(key, m)), 2, 2.0);
 
@@ -266,6 +266,21 @@ class ProbingHashTableTest {
                 assertNull(table.search(4), "Search for an absent key returns null after visiting every slot");
                 assertFalse(table.delete(4), "Delete of an absent key returns false after visiting every slot");
             });
+        }
+
+        @Test
+        @DisplayName("grows when an insert finds it full, though the load is below the max")
+        void insertIntoFullTableGrows() {
+            for (int key = 0; key < 4; key++) {
+                table.insert(key, "Value_" + key);
+            }
+
+            // With no free slot to stop at, this insert would probe forever if the table did not grow.
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () -> table.insert(4, "Value_4"));
+            assertEquals(8, table.capacity(), "The table doubled to 8 slots for the fifth key");
+            for (int key = 0; key <= 4; key++) {
+                assertEquals("Value_" + key, table.search(key), "Key " + key + " is found after the table grew");
+            }
         }
     }
 }

@@ -20,11 +20,11 @@ public class HashingUtils {
     final private Random rand;
 
     /**
-     * Creates an instance seeded with the current time in milliseconds, so two instances made in the
-     * same millisecond produce the same numbers.
+     * Creates an instance with its own random source, seeded differently from every other instance,
+     * even one made at the same moment.
      */
     public HashingUtils() {
-        rand = new Random(System.currentTimeMillis()); // Using current time as the random seed
+        rand = new Random();
     }
 
     /**
@@ -59,13 +59,17 @@ public class HashingUtils {
      * Generates random prime in the range [lower, higher].
      * It draws odd candidates with genLong until one passes MILLER_RABIN_ROUNDS rounds of the
      * Miller-Rabin test, so it returns a composite with probability at most 4^-50, and never 2. The
-     * range must be wide and must not contain numbers below 3: genLong is slow on a narrow range, and
-     * a candidate below 3 leaves no base to test with, so it never returns.
-     * @param lower - a lower bound for the returned value
+     * range must hold an odd prime, or it never returns.
+     * @param lower - a lower bound for the returned value, at least 3
      * @param higher - an upper bound for the returned value
      * @return a random prime, between lower and higher
+     * @throws IllegalArgumentException - If lower is below 3 or above higher.
      */
     public long genPrime(long lower, long higher) {
+        // A candidate below 3 would leave the Miller-Rabin test no base to draw from [2, candidate - 1].
+        if (lower < 3) {
+            throw new IllegalArgumentException("lower must be at least 3. Received: " + lower);
+        }
         long suspectPrime = genLong(lower,higher);
         while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, MILLER_RABIN_ROUNDS)){
             suspectPrime = genLong(lower,higher);
@@ -74,19 +78,26 @@ public class HashingUtils {
     }
 
     /***
-     * Generates random long values until getting a value in the range [lower, higher].
-     * Each draw lands in the range with probability (higher - lower + 1) / 2^64, so the expected number
-     * of draws is 2^64 divided by the size of the range: a few for the ranges the hash functions use,
-     * but far too many for a narrow range. If lower is above higher, it never returns.
+     * Generates a random long in the range [lower, higher], uniformly, with both bounds included.
      * @param lower - a lower bound for the returned value
      * @param higher - an upper bound for the returned value
      * @return a random long, between lower and higher
+     * @throws IllegalArgumentException - If lower is above higher.
      */
     public long genLong(long lower, long higher) {
-        long value = rand.nextLong();
-        while (value < lower | value > higher)
-            value = rand.nextLong();
-        return value;
+        if (lower > higher) {
+            throw new IllegalArgumentException(
+                    "lower must not be above higher. Received: [" + lower + ", " + higher + "]");
+        }
+        // nextLong(origin, bound) leaves out bound, so an upper bound of Long.MAX_VALUE is reached by
+        // shifting the range down by one, or, for the whole range, by drawing any long.
+        if (higher < Long.MAX_VALUE) {
+            return rand.nextLong(lower, higher + 1);
+        }
+        if (lower > Long.MIN_VALUE) {
+            return rand.nextLong(lower - 1, higher) + 1;
+        }
+        return rand.nextLong();
     }
 
     /**

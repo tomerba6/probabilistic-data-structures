@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -195,6 +197,24 @@ class IndexableSkipListTest {
                 currentExpectedProb = currentExpectedProb * (1 - p);
             }
         }
+
+        @Test
+        @DisplayName("accepts p = 1, where every node has height 0")
+        void probabilityOne() {
+            IndexableSkipList flat = new IndexableSkipList(1.0);
+            for (int i = 0; i < 100; i++) {
+                assertEquals(0, flat.generateHeight(), "With p = 1 every height is 0");
+            }
+        }
+
+        // At p = 0 or below the height loop never ends, so the list rejects such a p when it is built.
+        @ParameterizedTest(name = "p = {0}")
+        @ValueSource(doubles = {0.0, -0.5, 1.5, Double.NaN})
+        @DisplayName("rejects a p outside (0, 1]")
+        void probabilityOutOfRange(double p) {
+            assertThrows(IllegalArgumentException.class, () -> new IndexableSkipList(p),
+                    "IndexableSkipList(" + p + ") is rejected");
+        }
     }
 
     @Nested
@@ -244,6 +264,26 @@ class IndexableSkipListTest {
             list.insert(30);
             assertWidthsValid(list, "Widths unaffected by duplicate insertion");
             assertEquals(5, list.size, "Size unchanged after duplicate insertion");
+        }
+
+        @Test
+        @DisplayName("a duplicate, which leaves the list's height unchanged")
+        void duplicateKeepsHeight() {
+            // Heights the test chooses: 2 for the first insert of 7, then 9 if the duplicate draws one.
+            Deque<Integer> heights = new ArrayDeque<>(List.of(2, 9));
+            IndexableSkipList chosenHeights = new IndexableSkipList(0.5) {
+                @Override
+                public int generateHeight() {
+                    return heights.isEmpty() ? 0 : heights.poll();
+                }
+            };
+            chosenHeights.insert(7);
+            assertEquals(2, chosenHeights.head.height(), "Setup: the first insert raised the list to height 2");
+
+            assertNull(chosenHeights.insert(7), "Inserting 7 again returns null");
+            assertEquals(2, chosenHeights.head.height(), "The duplicate left the list at height 2");
+            assertEquals(1, chosenHeights.size, "Size is still 1");
+            assertWidthsValid(chosenHeights, "Widths unaffected by the duplicate");
         }
     }
 
@@ -305,6 +345,25 @@ class IndexableSkipListTest {
             assertFalse(list.delete(null), "Deleting null is rejected");
             assertWidthsValid(list, "Widths unaffected by deleting null");
             assertEquals(5, list.size, "Size unchanged after deleting null");
+        }
+
+        @Test
+        @DisplayName("deleting the tail sentinel")
+        void tailSentinel() {
+            AbstractSkipList.SkipListNode tail = list.successor(list.maximum());
+            assertFalse(list.delete(tail), "Deleting the tail sentinel is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting the tail");
+            assertEquals(5, list.size, "Size unchanged after deleting the tail");
+            assertNotNull(list.search(50), "Search still finds the last element, 50");
+        }
+
+        @Test
+        @DisplayName("deleting the head sentinel")
+        void headSentinel() {
+            AbstractSkipList.SkipListNode head = list.predecessor(list.minimum());
+            assertFalse(list.delete(head), "Deleting the head sentinel is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting the head");
+            assertEquals(5, list.size, "Size unchanged after deleting the head");
         }
 
         @Test
