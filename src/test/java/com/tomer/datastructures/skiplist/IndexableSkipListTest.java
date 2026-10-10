@@ -308,6 +308,25 @@ class IndexableSkipListTest {
         }
 
         @Test
+        @DisplayName("deleting the tail sentinel")
+        void tailSentinel() {
+            AbstractSkipList.SkipListNode tail = list.successor(list.maximum());
+            assertFalse(list.delete(tail), "Deleting the tail sentinel is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting the tail");
+            assertEquals(5, list.size, "Size unchanged after deleting the tail");
+            assertNotNull(list.search(50), "Search still finds the last element, 50");
+        }
+
+        @Test
+        @DisplayName("deleting the head sentinel")
+        void headSentinel() {
+            AbstractSkipList.SkipListNode head = list.predecessor(list.minimum());
+            assertFalse(list.delete(head), "Deleting the head sentinel is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting the head");
+            assertEquals(5, list.size, "Size unchanged after deleting the head");
+        }
+
+        @Test
         @DisplayName("deleting every element")
         void emptyingTheList() {
             deleteKey(30);

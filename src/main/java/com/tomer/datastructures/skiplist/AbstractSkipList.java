@@ -109,12 +109,12 @@ abstract public class AbstractSkipList {
      * Removes a node from every level it is on, updates the widths, and drops the top level while it
      * holds no elements. Expected O(log n).
      *
-     * @param skipListNode the node to remove; may be null, but must not be the tail sentinel
-     * @return true if the node was removed; false if it is null, the head, or not in this list, such as
-     *         a node already deleted or one from another list with the same key
+     * @param skipListNode the node to remove; may be null or a sentinel
+     * @return true if the node was removed; false if it is null, a sentinel, or not in this list, such
+     *         as a node already deleted or one from another list with the same key
      */
     public boolean delete(SkipListNode skipListNode) {
-        if (skipListNode == null) {
+        if (skipListNode == null || skipListNode == head || skipListNode == tail) {
             return false;
         }
 
