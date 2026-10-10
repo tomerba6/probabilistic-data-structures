@@ -1,6 +1,7 @@
 package com.tomer.datastructures.composite;
 
 import com.tomer.datastructures.hashing.ChainedHashTable;
+import com.tomer.datastructures.hashing.HashFactory;
 import com.tomer.datastructures.hashing.ModularHash;
 import com.tomer.datastructures.skiplist.AbstractSkipList;
 import com.tomer.datastructures.skiplist.IndexableSkipList;
@@ -16,6 +17,8 @@ import java.util.List;
  */
 public class MyDataStructure {
     private static final double SKIP_LIST_PROBABILITY = 0.5;
+    // The largest N: its table of 2^MAX_K slots is the largest the hash factory accepts.
+    private static final int MAX_CAPACITY = 1 << HashFactory.MAX_K;
 
     private final IndexableSkipList skipList;
     private final ChainedHashTable<Integer, AbstractSkipList.SkipListNode> hashTable;
@@ -30,8 +33,12 @@ public class MyDataStructure {
      * initialize the hash table array and empty linked lists. Total: Theta(N) Worst Case.
      *
      * @param N The maximal number of items that may reside in the DS.
+     * @throws IllegalArgumentException if N is negative or above 2^30, the largest table the hash accepts.
      */
     public MyDataStructure(int N) {
+        if (N < 0 || N > MAX_CAPACITY) {
+            throw new IllegalArgumentException("N must be between 0 and " + MAX_CAPACITY + ". Received: " + N);
+        }
         this.capacity = N;
         this.size = 0;
         this.skipList = new IndexableSkipList(SKIP_LIST_PROBABILITY);

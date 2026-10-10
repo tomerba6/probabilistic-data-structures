@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("MyDataStructure (Task 4.1)")
@@ -88,6 +90,28 @@ class MyDataStructureTest {
             assertTrue(single.delete(7), "Delete 7");
             assertTrue(single.insert(8), "Insert 8 fits once 7 is deleted");
             assertEquals(8, single.select(0), "Select index 0 is the one value, 8");
+        }
+
+        @Test
+        @DisplayName("takes no inserts when N = 0")
+        void capacityZero() {
+            MyDataStructure empty = new MyDataStructure(0);
+            assertFalse(empty.insert(1), "Insert 1 is beyond capacity 0");
+        }
+
+        @Test
+        @DisplayName("rejects a negative N")
+        void negativeCapacity() {
+            assertThrows(IllegalArgumentException.class, () -> new MyDataStructure(-1), "N = -1 is rejected");
+        }
+
+        @Test
+        @DisplayName("rejects an N above 2^30, the largest table the hash accepts")
+        void capacityAboveLargestTable() {
+            // The constructor used to loop forever here; the timeout turns that hang into a failure.
+            assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
+                    assertThrows(IllegalArgumentException.class, () -> new MyDataStructure((1 << 30) + 1),
+                            "N = 2^30 + 1 is rejected"));
         }
     }
 
