@@ -7,29 +7,68 @@ import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A skip list of distinct int keys in ascending order, with a head and a tail sentinel on every
+ * level. Level 0 links every element, and each higher level skips more of them. Every link also
+ * stores its width, the number of level-0 steps it spans, so on every level the widths from head to
+ * tail add up to size + 1. Subclasses choose node heights, how to search and how to drop a level. Any
+ * int can be stored, including Integer.MIN_VALUE and Integer.MAX_VALUE, the sentinels' own keys.
+ */
 abstract public class AbstractSkipList {
+    /** The sentinel before every element: key Integer.MIN_VALUE, on every level, no previous node. */
     final protected SkipListNode head;
+    /** The sentinel after every element: key Integer.MAX_VALUE, on every level, no next node. */
     final protected SkipListNode tail;
+    /** The number of elements, not counting the sentinels. */
     protected int size = 0;
 
+    /**
+     * Creates an empty list: the head and the tail, linked on level 0.
+     */
     public AbstractSkipList() {
         head = new SkipListNode(Integer.MIN_VALUE);
         tail = new SkipListNode(Integer.MAX_VALUE);
         increaseHeight();
     }
 
+    /**
+     * Adds a level on top of the list, on which the head links straight to the tail with width
+     * size + 1. Insert calls it when a new node is taller than the list.
+     */
     public void increaseHeight() {
         head.addLevel(tail, null);
         tail.addLevel(null, head);
         head.setNextWidth(head.height(), size + 1);
     }
 
+    /**
+     * Removes the top level from the head and the tail. Delete calls it while the top level holds no
+     * elements; it must not be called while an element is on the top level, or on a list of one level.
+     */
     abstract void decreaseHeight();
 
+    /**
+     * Returns the node with the largest key that is not above key. Expected O(log n).
+     *
+     * @param key the key to look for; any int
+     * @return the node with key if it is stored, otherwise the one before where it would go: the head
+     *         if key is below every element. Never the tail.
+     */
     abstract SkipListNode find(int key);
 
+    /**
+     * Draws the height of a new node: the index of its top level.
+     *
+     * @return the new node's height, 0 or more
+     */
     abstract int generateHeight();
 
+    /**
+     * Finds the node with a key. Expected O(log n).
+     *
+     * @param key the key to look for; any int
+     * @return the node with key, or null if it is not stored. Never a sentinel.
+     */
     public SkipListNode search(int key) {
         SkipListNode curr = find(key);
 
@@ -37,6 +76,14 @@ abstract public class AbstractSkipList {
         return curr != head && curr.key() == key ? curr : null;
     }
 
+    /**
+     * Adds a node with a key at a height drawn by generateHeight, raising the list first if the node
+     * is taller, and updates the widths of the links it splits or passes under. Expected O(log n).
+     *
+     * @param key the key to add; any int
+     * @return the new node, or null if key is already stored. Nothing is added then, but the list may
+     *         still have grown taller.
+     */
     public SkipListNode insert(int key) {
         int nodeHeight = generateHeight();
 
@@ -58,6 +105,14 @@ abstract public class AbstractSkipList {
         return newNode;
     }
 
+    /**
+     * Removes a node from every level it is on, updates the widths, and drops the top level while it
+     * holds no elements. Expected O(log n).
+     *
+     * @param skipListNode the node to remove; may be null, but must not be the tail sentinel
+     * @return true if the node was removed; false if it is null, the head, or not in this list, such as
+     *         a node already deleted or one from another list with the same key
+     */
     public boolean delete(SkipListNode skipListNode) {
         if (skipListNode == null) {
             return false;
@@ -153,14 +208,32 @@ abstract public class AbstractSkipList {
         }
     }
 
+    /**
+     * Returns the node before a node on level 0, in constant time.
+     *
+     * @param skipListNode a node of this list, not null
+     * @return the previous node: the head for the smallest element, null for the head itself
+     */
     public SkipListNode predecessor(SkipListNode skipListNode) {
         return skipListNode.getPrev(0);
     }
 
+    /**
+     * Returns the node after a node on level 0, in constant time.
+     *
+     * @param skipListNode a node of this list, not null
+     * @return the next node: the tail for the largest element, null for the tail itself
+     */
     public SkipListNode successor(SkipListNode skipListNode) {
         return skipListNode.getNext(0);
     }
 
+    /**
+     * Returns the node with the smallest key, in constant time.
+     *
+     * @return the first node after the head
+     * @throws NoSuchElementException if the list is empty
+     */
     public SkipListNode minimum() {
         if (head.getNext(0) == tail) {
             throw new NoSuchElementException("minimum of an empty skip list");
@@ -169,6 +242,12 @@ abstract public class AbstractSkipList {
         return head.getNext(0);
     }
 
+    /**
+     * Returns the node with the largest key, in constant time.
+     *
+     * @return the last node before the tail
+     * @throws NoSuchElementException if the list is empty
+     */
     public SkipListNode maximum() {
         if (tail.getPrev(0) == head) {
             throw new NoSuchElementException("maximum of an empty skip list");
@@ -209,12 +288,22 @@ abstract public class AbstractSkipList {
         return str.toString();
     }
 
+    /**
+     * A node of a skip list: an int key, with no satellite data, and on each of its levels 0 to
+     * height() the next and previous nodes and the width of the link to the next one. It starts with
+     * no levels; addLevel adds them.
+     */
     public static class SkipListNode extends Element<Integer, Object> {
         final private List<SkipListNode> next;
         final private List<SkipListNode> prev;
         private List<Integer> nextWidth;
         private int height;
 
+        /**
+         * Creates a node with no levels yet, so its height is -1.
+         *
+         * @param key the node's key
+         */
         public SkipListNode(int key) {
             super(key);
             next = new ArrayList<>();
@@ -224,36 +313,90 @@ abstract public class AbstractSkipList {
 
         }
 
+        /**
+         * Returns the previous node on a level.
+         *
+         * @param level a level from 0 to height()
+         * @return the previous node, or null on the head
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public SkipListNode getPrev(int level) {
             checkLevel(level);
             return prev.get(level);
         }
 
+        /**
+         * Returns the next node on a level.
+         *
+         * @param level a level from 0 to height()
+         * @return the next node, or null on the tail
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public SkipListNode getNext(int level) {
             checkLevel(level);
             return next.get(level);
         }
 
+        /**
+         * Returns the width of the link to the next node on a level: how many level-0 steps it spans.
+         *
+         * @param level a level from 0 to height()
+         * @return the width
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public int getNextWidth(int level) {
             checkLevel(level);
             return nextWidth.get(level);
         }
 
+        /**
+         * Links this node to a next node on a level, leaving the link's width unchanged.
+         *
+         * @param level a level from 0 to height()
+         * @param next the new next node
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public void setNext(int level, SkipListNode next) {
             checkLevel(level);
             this.next.set(level, next);
         }
 
+        /**
+         * Links this node to a previous node on a level.
+         *
+         * @param level a level from 0 to height()
+         * @param prev the new previous node
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public void setPrev(int level, SkipListNode prev) {
             checkLevel(level);
             this.prev.set(level, prev);
         }
 
+        /**
+         * Sets the width of the link to the next node on a level.
+         *
+         * @param level a level from 0 to height()
+         * @param nextWidth how many level-0 steps the link spans
+         * @throws IllegalStateException if level is above height()
+         * @throws IndexOutOfBoundsException if level is negative
+         */
         public void setNextWidth(int level, int nextWidth) {
             checkLevel(level);
             this.nextWidth.set(level, nextWidth);
         }
 
+        /**
+         * Adds a level on top of this node with the given links and a width of 0, for the caller to set.
+         *
+         * @param next the next node on the new level
+         * @param prev the previous node on the new level
+         */
         public void addLevel(SkipListNode next, SkipListNode prev) {
             ++height;
             this.next.add(next);
@@ -261,6 +404,11 @@ abstract public class AbstractSkipList {
             this.nextWidth.add(0);
         }
 
+        /**
+         * Removes this node's top level and its links.
+         *
+         * @throws IndexOutOfBoundsException if the node has no levels
+         */
         public void removeLevel() {
             this.next.remove(height);
             this.prev.remove(height);
@@ -268,6 +416,11 @@ abstract public class AbstractSkipList {
             --height;
         }
 
+        /**
+         * Returns the index of this node's top level.
+         *
+         * @return -1 with no levels, 0 when the node is only on level 0
+         */
         public int height() { return height; }
 
         private void checkLevel(int level) {
