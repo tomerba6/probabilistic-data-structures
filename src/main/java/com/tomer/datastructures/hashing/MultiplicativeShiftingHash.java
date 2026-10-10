@@ -2,7 +2,7 @@ package com.tomer.datastructures.hashing;
 
 /**
  * A {@link HashFactory} for {@code Long} keys. Each function it draws multiplies the key by a random
- * a, letting the product wrap around in 64 bits, and keeps the product's top k bits:
+ * odd a, letting the product wrap around in 64 bits, and keeps the product's top k bits:
  * {@code (a * x) >>> (64 - k)}, a slot in [0, 2^k). Drawing one only takes a random long, so it is
  * cheap.
  */
@@ -44,7 +44,9 @@ public class MultiplicativeShiftingHash implements HashFactory<Long> {
             if (k < 0 || k > MAX_K) {
                 throw new IllegalArgumentException("k must be between 0 and " + MAX_K + ". Received: " + k);
             }
-            this.a = utils.genLong(2L, Long.MAX_VALUE);
+            // Multiply-shift needs an odd a: with an even one, a * 2^63 wraps around to 0, so keys x and
+            // x + 2^63 would always share a slot.
+            this.a = utils.genLong(2L, Long.MAX_VALUE) | 1;
             this.k = k;
         }
         @Override
@@ -60,7 +62,7 @@ public class MultiplicativeShiftingHash implements HashFactory<Long> {
         /**
          * Returns the multiplier a.
          *
-         * @return a, in [2, Long.MAX_VALUE].
+         * @return a, odd, in [3, Long.MAX_VALUE].
          */
         public long a() {
             return a;
