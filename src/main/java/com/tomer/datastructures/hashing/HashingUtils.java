@@ -20,11 +20,11 @@ public class HashingUtils {
     final private Random rand;
 
     /**
-     * Creates an instance seeded with the current time in milliseconds, so two instances made in the
-     * same millisecond produce the same numbers.
+     * Creates an instance with its own random source, seeded differently from every other instance,
+     * even one made at the same moment.
      */
     public HashingUtils() {
-        rand = new Random(System.currentTimeMillis()); // Using current time as the random seed
+        rand = new Random();
     }
 
     /**

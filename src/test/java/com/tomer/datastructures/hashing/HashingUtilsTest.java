@@ -14,6 +14,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -64,6 +65,24 @@ class HashingUtilsTest {
             assertTimeoutPreemptively(Duration.ofSeconds(5), () ->
                     assertThrows(IllegalArgumentException.class, () -> new HashingUtils().genPrime(lower, 100),
                             "genPrime(" + lower + ", 100) is rejected"));
+        }
+    }
+
+    @Nested
+    @DisplayName("seeding")
+    class Seeding {
+
+        // Seeded from the current millisecond, two instances made back to back drew the same numbers.
+        @Test
+        @DisplayName("two instances made back to back draw different numbers")
+        void instancesMadeTogether() {
+            for (int pair = 1; pair <= 20; pair++) {
+                HashingUtils first = new HashingUtils();
+                HashingUtils second = new HashingUtils();
+                assertNotEquals(first.genLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        second.genLong(Long.MIN_VALUE, Long.MAX_VALUE),
+                        "Pair " + pair + " drew the same first number");
+            }
         }
     }
 
