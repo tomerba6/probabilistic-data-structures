@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
@@ -262,6 +264,26 @@ class IndexableSkipListTest {
             list.insert(30);
             assertWidthsValid(list, "Widths unaffected by duplicate insertion");
             assertEquals(5, list.size, "Size unchanged after duplicate insertion");
+        }
+
+        @Test
+        @DisplayName("a duplicate, which leaves the list's height unchanged")
+        void duplicateKeepsHeight() {
+            // Heights the test chooses: 2 for the first insert of 7, then 9 if the duplicate draws one.
+            Deque<Integer> heights = new ArrayDeque<>(List.of(2, 9));
+            IndexableSkipList chosenHeights = new IndexableSkipList(0.5) {
+                @Override
+                public int generateHeight() {
+                    return heights.isEmpty() ? 0 : heights.poll();
+                }
+            };
+            chosenHeights.insert(7);
+            assertEquals(2, chosenHeights.head.height(), "Setup: the first insert raised the list to height 2");
+
+            assertNull(chosenHeights.insert(7), "Inserting 7 again returns null");
+            assertEquals(2, chosenHeights.head.height(), "The duplicate left the list at height 2");
+            assertEquals(1, chosenHeights.size, "Size is still 1");
+            assertWidthsValid(chosenHeights, "Widths unaffected by the duplicate");
         }
     }
 
