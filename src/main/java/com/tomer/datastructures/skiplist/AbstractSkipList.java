@@ -162,7 +162,7 @@ abstract public class AbstractSkipList {
 
     public SkipListNode minimum() {
         if (head.getNext(0) == tail) {
-            throw new NoSuchElementException("Empty Linked-List");
+            throw new NoSuchElementException("minimum of an empty skip list");
         }
 
         return head.getNext(0);
@@ -170,7 +170,7 @@ abstract public class AbstractSkipList {
 
     public SkipListNode maximum() {
         if (tail.getPrev(0) == head) {
-            throw new NoSuchElementException("Empty Linked-List");
+            throw new NoSuchElementException("maximum of an empty skip list");
         }
 
         return tail.getPrev(0);

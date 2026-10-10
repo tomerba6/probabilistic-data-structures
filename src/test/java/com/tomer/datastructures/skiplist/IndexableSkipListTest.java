@@ -344,6 +344,16 @@ class IndexableSkipListTest {
         }
 
         @Test
+        @DisplayName("name the call and the skip list when they throw")
+        void emptyListMessage() {
+            NoSuchElementException min = assertThrows(NoSuchElementException.class, list::minimum);
+            assertEquals("minimum of an empty skip list", min.getMessage(), "minimum names itself in its message");
+
+            NoSuchElementException max = assertThrows(NoSuchElementException.class, list::maximum);
+            assertEquals("maximum of an empty skip list", max.getMessage(), "maximum names itself in its message");
+        }
+
+        @Test
         @DisplayName("return the smallest and the largest element")
         void nonEmptyList() {
             insertAll(30, 10, 50, 20, 40);
