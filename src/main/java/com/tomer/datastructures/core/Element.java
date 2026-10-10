@@ -27,21 +27,6 @@ public class Element<K,V> {
         return this.satelliteData;
     }
 
-    public boolean equals(Object other){
-        boolean ans = false;
-        if (other instanceof Element<?,?>) {
-            Element<?,?> castedOther = (Element<?,?>) other;
-            boolean sameSatData;
-            if (this.satelliteData() == null)
-                sameSatData = (castedOther.satelliteData() == null);
-            else {
-                sameSatData = this.satelliteData().equals(castedOther.satelliteData());
-            }
-            ans = this.key() == castedOther.key() & sameSatData;
-        }
-        return ans;
-    }
-
     public String toString() {
         return "[" + this.key() + "]";
     }

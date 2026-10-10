@@ -53,6 +53,29 @@
             </plugin>
 
             <!--
+                HTML test report on every `verify`, rendered from the XML Surefire already wrote, so
+                the tests do not run twice. Report lands in target/reports/surefire.html. Declared
+                before JaCoCo so it is written even when the coverage check fails the build.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${surefire.plugin.version}</version>
+                <configuration>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test-report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
                 Coverage is measured on every `verify`, so any figure quoted about it is
                 generated rather than asserted. Report lands in target/site/jacoco.
                 The experiments package is left out of both the report and the floor: it is

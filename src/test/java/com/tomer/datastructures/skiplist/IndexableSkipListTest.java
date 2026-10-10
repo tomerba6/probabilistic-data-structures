@@ -17,6 +17,8 @@ import static com.tomer.datastructures.skiplist.SkipListInvariants.assertWidthsV
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -108,6 +110,57 @@ class IndexableSkipListTest {
             AbstractSkipList.SkipListNode node = list.find(100);
             assertNotNull(node, "Find returns the maximum element node for a key larger than any in list");
             assertEquals(50, node.key(), "Find returns the maximum element node for a key larger than any in list");
+        }
+
+        @Test
+        @DisplayName("returns the maximum for Integer.MAX_VALUE, not the tail")
+        void integerMaxValue() {
+            AbstractSkipList.SkipListNode node = list.find(Integer.MAX_VALUE);
+            assertEquals(50, node.key(), "Find(Integer.MAX_VALUE) returns the maximum element, not the tail sentinel");
+        }
+    }
+
+    @Nested
+    @DisplayName("search at the sentinel keys")
+    class SearchAtSentinelKeys {
+
+        @BeforeEach
+        void insertTenToThirty() {
+            insertAll(10, 20, 30);
+        }
+
+        @Test
+        @DisplayName("returns null for Integer.MAX_VALUE when it is not stored")
+        void maxValueNotStored() {
+            assertNull(list.search(Integer.MAX_VALUE), "Search(Integer.MAX_VALUE) is null, not the tail sentinel");
+        }
+
+        @Test
+        @DisplayName("returns null for Integer.MIN_VALUE when it is not stored")
+        void minValueNotStored() {
+            assertNull(list.search(Integer.MIN_VALUE), "Search(Integer.MIN_VALUE) is null, not the head sentinel");
+        }
+
+        @Test
+        @DisplayName("finds and deletes a stored Integer.MAX_VALUE")
+        void storedMaxValue() {
+            AbstractSkipList.SkipListNode node = list.insert(Integer.MAX_VALUE);
+            assertSame(node, list.search(Integer.MAX_VALUE), "Search(Integer.MAX_VALUE) returns the stored node");
+
+            assertTrue(deleteKey(Integer.MAX_VALUE), "Delete removes the stored Integer.MAX_VALUE");
+            assertEquals(30, list.maximum().key(), "The maximum is 30 again");
+            assertWidthsValid(list, "Widths correct after deleting Integer.MAX_VALUE");
+        }
+
+        @Test
+        @DisplayName("finds and deletes a stored Integer.MIN_VALUE")
+        void storedMinValue() {
+            AbstractSkipList.SkipListNode node = list.insert(Integer.MIN_VALUE);
+            assertSame(node, list.search(Integer.MIN_VALUE), "Search(Integer.MIN_VALUE) returns the stored node");
+
+            assertTrue(deleteKey(Integer.MIN_VALUE), "Delete removes the stored Integer.MIN_VALUE");
+            assertEquals(10, list.minimum().key(), "The minimum is 10 again");
+            assertWidthsValid(list, "Widths correct after deleting Integer.MIN_VALUE");
         }
     }
 
@@ -329,6 +382,22 @@ class IndexableSkipListTest {
             list.insert(25);
             assertEquals(25, list.select(2), "Select(2) dynamically shifts to 25 after insertion");
             assertEquals(40, list.select(3), "Select(3) shifts back to 40");
+        }
+
+        @ParameterizedTest(name = "index = {0}")
+        @ValueSource(ints = {-1, 5, 6})
+        @DisplayName("throws for an index outside 0 to size - 1")
+        void indexOutOfRange(int index) {
+            assertThrows(IndexOutOfBoundsException.class, () -> list.select(index),
+                    "Select(" + index + ") on 5 elements throws IndexOutOfBoundsException");
+        }
+
+        @Test
+        @DisplayName("throws on an empty list")
+        void emptyList() {
+            IndexableSkipList empty = new IndexableSkipList(0.5);
+            assertThrows(IndexOutOfBoundsException.class, () -> empty.select(0),
+                    "Select(0) on an empty list throws IndexOutOfBoundsException");
         }
     }
 
