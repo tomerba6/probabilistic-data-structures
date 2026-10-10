@@ -15,9 +15,10 @@ import java.util.List;
  * Theta(1) contains queries and direct node access to prevent redundant searches.
  */
 public class MyDataStructure {
-    private IndexableSkipList skipList;
-    private final double PROBABILITY = 0.5;
-    private ChainedHashTable<Integer, AbstractSkipList.SkipListNode> hashTable;
+    private static final double SKIP_LIST_PROBABILITY = 0.5;
+
+    private final IndexableSkipList skipList;
+    private final ChainedHashTable<Integer, AbstractSkipList.SkipListNode> hashTable;
     private final int capacity;
     private int size;
 
@@ -33,7 +34,7 @@ public class MyDataStructure {
     public MyDataStructure(int N) {
         this.capacity = N;
         this.size = 0;
-        this.skipList = new IndexableSkipList(PROBABILITY);
+        this.skipList = new IndexableSkipList(SKIP_LIST_PROBABILITY);
 
         // Calculate the smallest k >= 1 such that 2^k >= N
         int k = 1;
