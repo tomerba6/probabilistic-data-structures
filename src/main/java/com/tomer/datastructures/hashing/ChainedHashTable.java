@@ -2,6 +2,7 @@ package com.tomer.datastructures.hashing;
 
 import com.tomer.datastructures.core.Element;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -70,9 +71,10 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
 
     public boolean delete(K key) {
         int index = this.hashFunc.hash(key);
-        for (Element<K,V> element : this.table[index]) {
-            if (element.key().equals(key)) {
-                this.table[index].remove(element);
+        Iterator<Element<K,V>> iterator = this.table[index].iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().key().equals(key)) {
+                iterator.remove();
                 this.tableSize--;
                 return true;
             }
