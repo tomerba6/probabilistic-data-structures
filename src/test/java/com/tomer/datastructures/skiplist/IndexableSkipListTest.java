@@ -247,6 +247,14 @@ class IndexableSkipListTest {
         }
 
         @Test
+        @DisplayName("deleting null")
+        void nullNode() {
+            assertFalse(list.delete(null), "Deleting null is rejected");
+            assertWidthsValid(list, "Widths unaffected by deleting null");
+            assertEquals(5, list.size, "Size unchanged after deleting null");
+        }
+
+        @Test
         @DisplayName("deleting every element")
         void emptyingTheList() {
             deleteKey(30);
@@ -333,6 +341,16 @@ class IndexableSkipListTest {
         void emptyList() {
             assertThrows(NoSuchElementException.class, list::minimum, "minimum of an empty list throws");
             assertThrows(NoSuchElementException.class, list::maximum, "maximum of an empty list throws");
+        }
+
+        @Test
+        @DisplayName("name the call and the skip list when they throw")
+        void emptyListMessage() {
+            NoSuchElementException min = assertThrows(NoSuchElementException.class, list::minimum);
+            assertEquals("minimum of an empty skip list", min.getMessage(), "minimum names itself in its message");
+
+            NoSuchElementException max = assertThrows(NoSuchElementException.class, list::maximum);
+            assertEquals("maximum of an empty skip list", max.getMessage(), "maximum names itself in its message");
         }
 
         @Test

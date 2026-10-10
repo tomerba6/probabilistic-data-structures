@@ -23,8 +23,8 @@ public class ModularHash implements HashFactory<Integer> {
         final private int m;
 
         public Functor(int k){
-            if (k < 0 || k > 30) {
-                throw new IllegalArgumentException("k must be between 0 and 30. Received: " + k);
+            if (k < 0 || k > MAX_K) {
+                throw new IllegalArgumentException("k must be between 0 and " + MAX_K + ". Received: " + k);
             }
             this.a = rand.nextInt(Integer.MAX_VALUE - 1) + 1;
             this.b = rand.nextInt(Integer.MAX_VALUE);

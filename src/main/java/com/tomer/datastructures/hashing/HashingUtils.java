@@ -3,22 +3,21 @@ package com.tomer.datastructures.hashing;
 import com.tomer.datastructures.core.Pair;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 public class HashingUtils {
-    final private static int a_ASCII = 97;
-    final private static int z_ASCII = 122;
+    // Rounds of the Miller-Rabin test that genPrime runs on each candidate. The textbook bound on a
+    // composite passing all of them is 4^-rounds.
+    private static final int MILLER_RABIN_ROUNDS = 50;
+
     final private Random rand;
 
     public HashingUtils() {
         rand = new Random(System.currentTimeMillis()); // Using current time as the random seed
     }
-    
+
     public static long mod(long x, long m) {
         long res = x % m;
 
@@ -30,21 +29,21 @@ public class HashingUtils {
 
         return (res < 0) ? res + m : res;
     }
-    
+
     /***
      * Generates random prime in the range [lower, higher].
      * @param lower - a lower bound for the returned value
      * @param higher - an upper bound for the returned value
      * @return a random prime, between lower and higher
-     */    
+     */
     public long genPrime(long lower, long higher) {
-    	long suspectPrime = genLong(lower,higher);
-        while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, 50)){
+        long suspectPrime = genLong(lower,higher);
+        while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, MILLER_RABIN_ROUNDS)){
             suspectPrime = genLong(lower,higher);
         }
         return suspectPrime;
     }
-    
+
     /***
      * Generates random long values until getting a value in the range [lower, higher].
      * @param lower - a lower bound for the returned value
@@ -52,41 +51,18 @@ public class HashingUtils {
      * @return a random long, between lower and higher
      */
     public long genLong(long lower, long higher) {
-    	long value = rand.nextLong();
-    	while (value < lower | value > higher)
-    		value = rand.nextLong();
-    	return value;
+        long value = rand.nextLong();
+        while (value < lower | value > higher)
+            value = rand.nextLong();
+        return value;
     }
-    
+
     public Integer[] genUniqueIntegers(int numOfItemsToGen) {
         return Stream.generate(() -> rand.ints(0, Integer.MAX_VALUE))
                 .flatMap(IntStream::boxed)
                 .distinct()
                 .limit(numOfItemsToGen)
                 .toArray(Integer[]::new);
-    }
-
-    public Long[] genUniqueLong(int numOfItemsToGen) {
-        return Stream.generate(() -> rand.longs(0, Long.MAX_VALUE))
-                     .flatMap(LongStream::boxed)
-                     .distinct()
-                     .limit(numOfItemsToGen)
-                     .toArray(Long[]::new);
-    }
-
-    public List<String> genUniqueStrings(int numOfItemsToGen, int stringMinLength, int stringMaxLength) {
-       return rand.ints(stringMinLength, stringMaxLength)
-                   .limit(numOfItemsToGen)
-                   .mapToObj(length -> rand.ints(a_ASCII,
-                                                 z_ASCII
-                                                 + 1)
-                                           .limit(length)
-                                           .collect(StringBuilder::new,
-                                                    StringBuilder::appendCodePoint,
-                                                    StringBuilder::append)
-                                           .toString())
-                   .distinct()
-                   .collect(Collectors.toList());
     }
 
     private static Pair<Integer, Long> calculateEvenDivisorSplit(long num) {
@@ -100,12 +76,11 @@ public class HashingUtils {
     }
 
     /***
-     * Evaluates the power of x at y, done at modulo mod in an efficient matter,
-     * using the characteristics of modulo: (x * y) mod n = ((x mod n) * (y mod n)) mod n
-     * @param x - The basis
-     * @param y - The power
+     * Multiplies a by b at modulo mod, using BigInteger so the product cannot overflow a long.
+     * @param a - The first factor
+     * @param b - The second factor
      * @param mod - The intended modulo of the value
-     * @return (x ^ y) % mod
+     * @return (a * b) % mod
      */
     private static long multiplyMod(long a, long b, long mod) {
         final BigInteger aBig = BigInteger.valueOf(a);
@@ -116,6 +91,14 @@ public class HashingUtils {
         return multiplyRes.mod(modBig).longValue();
     }
 
+    /***
+     * Evaluates the power of a at b, done at modulo mod in an efficient manner,
+     * using the characteristics of modulo: (x * y) mod n = ((x mod n) * (y mod n)) mod n
+     * @param a - The basis
+     * @param b - The power
+     * @param mod - The intended modulo of the value
+     * @return (a ^ b) % mod
+     */
     private static long modPow(long a, long b, long mod) {
         final BigInteger aBig = BigInteger.valueOf(a);
         final BigInteger bBig = BigInteger.valueOf(b);
@@ -125,13 +108,13 @@ public class HashingUtils {
         return res.longValue();
     }
 
-    
+
     /**
      * An implementation of the Rabin-Miller probabilistic primality test as defined in the following link:
      * <a href="https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test">...</a>
      * This process requires theta of (rounds * log(suspect) ^ 3)
      * @param suspect - The number suspected of being prime, assuming suspect isn't even.
-     * @param rounds - The number of rounds to run the test. A good default value is 50.
+     * @param rounds - The number of rounds to run the test. genPrime passes {@code MILLER_RABIN_ROUNDS}.
      * @return True if suspect is probably prime with a false positive p of 4^(-rounds)
      */
     private boolean runMillerRabinTest(long suspect, int rounds) {

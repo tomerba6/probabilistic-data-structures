@@ -7,7 +7,5 @@ public interface HashTable<K, V>  {
 
     boolean delete(K key);
 
-    HashFunctor<K> getHashFunc();
-
     int capacity();
 }

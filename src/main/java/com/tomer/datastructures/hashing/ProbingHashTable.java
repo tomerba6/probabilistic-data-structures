@@ -2,13 +2,8 @@ package com.tomer.datastructures.hashing;
 
 import com.tomer.datastructures.core.Element;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ArrayList;
-
 public class ProbingHashTable<K, V> implements HashTable<K, V> {
-    final static int DEFAULT_INIT_CAPACITY = 4;
-    final static double DEFAULT_MAX_LOAD_FACTOR = 0.75;
+    private static final int NOT_FOUND = -1;
     private final Element<K, V> DELETED = new Element<>(null, null);
     final private HashFactory<K> hashFactory;
     final private double maxLoadFactor;
@@ -17,11 +12,6 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
     private HashFunctor<K> hashFunc;
     private Element<K,V>[] table;
     private int tableSize;
-
-
-    /*
-     * You should add additional private fields as needed.
-     */
 
     public ProbingHashTable(HashFactory<K> hashFactory, int k, double maxLoadFactor) {
         this.hashFactory = hashFactory;
@@ -33,25 +23,10 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
         this.tableSize = 0;
 
     }
-	
-	public ProbingHashTable(HashFactory<K> hashFactory) {
-        this(hashFactory, DEFAULT_INIT_CAPACITY, DEFAULT_MAX_LOAD_FACTOR);
-    }
 
     public V search(K key) {
-        int index = hashFunc.hash(key);
-        for (int i = 0; i < this.capacity; i++) {
-            if (table[index] == null) {
-                return null;
-            }
-
-            if (table[index] != DELETED && table[index].key().equals(key)) {
-                return table[index].satelliteData();
-            }
-
-            index = (index + 1) % capacity;
-        }
-        return null;
+        int index = indexOf(key);
+        return index == NOT_FOUND ? null : table[index].satelliteData();
     }
 
     public void insert(K key, V value) {
@@ -90,25 +65,31 @@ public class ProbingHashTable<K, V> implements HashTable<K, V> {
     }
 
     public boolean delete(K key) {
+        int index = indexOf(key);
+        if (index == NOT_FOUND) {
+            return false;
+        }
+
+        table[index] = DELETED;
+        tableSize--;
+        return true;
+    }
+
+    // Probes from the key's hash, skipping DELETED cells. Stops at an empty slot or after one full pass.
+    private int indexOf(K key) {
         int index = hashFunc.hash(key);
         for (int i = 0; i < this.capacity; i++) {
             if (table[index] == null) {
-                return false;
+                return NOT_FOUND;
             }
 
             if (table[index] != DELETED && table[index].key().equals(key)) {
-                table[index] = DELETED;
-                tableSize--;
-                return true;
+                return index;
             }
 
             index = (index + 1) % capacity;
         }
-        return false;
-    }
-
-    public HashFunctor<K> getHashFunc() {
-        return hashFunc;
+        return NOT_FOUND;
     }
 
     public int capacity() { return capacity; }

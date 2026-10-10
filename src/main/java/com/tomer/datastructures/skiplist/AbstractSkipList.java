@@ -23,7 +23,7 @@ abstract public class AbstractSkipList {
         tail.addLevel(null, head);
         head.setNextWidth(head.height(), size + 1);
     }
-	
+
     abstract void decreaseHeight();
 
     abstract SkipListNode find(int key);
@@ -43,56 +43,15 @@ abstract public class AbstractSkipList {
             increaseHeight();
         }
 
-        int currentMaxHeight = head.height();
+        Predecessors predecessors = predecessorsOf(key);
 
-        SkipListNode[] update = new SkipListNode[currentMaxHeight + 1];
-        int[] rank = new int[currentMaxHeight + 1];
-
-        SkipListNode curr = head;
-        int currentRank = 0;
-
-        for (int i = currentMaxHeight; i >= 0; i--) {
-            while (curr.getNext(i) != tail && curr.getNext(i).key() < key) {
-                currentRank += curr.getNextWidth(i);
-                curr = curr.getNext(i);
-            }
-
-            update[i] = curr;
-            rank[i] = currentRank;
-        }
-
-        SkipListNode nextNode = curr.getNext(0);
+        SkipListNode nextNode = predecessors.nodes()[0].getNext(0);
         if (nextNode != tail && nextNode.key() == key) {
             return null;
         }
 
         SkipListNode newNode = new SkipListNode(key);
-
-        int newNodeRank = rank[0] + 1;
-
-        for (int i = 0; i <= currentMaxHeight; i++) {
-            SkipListNode prev = update[i];
-            SkipListNode next = prev.getNext(i);
-
-            if (i <= nodeHeight) {
-                int oldWidth = prev.getNextWidth(i);
-
-                newNode.addLevel(next, prev);
-                prev.setNext(i, newNode);
-                next.setPrev(i, newNode);
-
-                int widthToNew = newNodeRank - rank[i];
-                int widthFromNew = oldWidth - widthToNew + 1;
-
-                prev.setNextWidth(i, widthToNew);
-                newNode.setNextWidth(i, widthFromNew);
-
-            } else {
-                int oldWidth = prev.getNextWidth(i);
-                prev.setNextWidth(i, oldWidth + 1);
-            }
-        }
-
+        linkIn(newNode, nodeHeight, predecessors);
         size++;
 
         return newNode;
@@ -103,33 +62,86 @@ abstract public class AbstractSkipList {
             return false;
         }
 
-        int key = skipListNode.key();
-        int currentMaxHeight = head.height();
+        Predecessors predecessors = predecessorsOf(skipListNode.key());
 
-        SkipListNode[] update = new SkipListNode[currentMaxHeight + 1];
-        SkipListNode curr = head;
-
-        for (int i = currentMaxHeight; i >= 0; i--) {
-            while (curr.getNext(i) != tail && curr.getNext(i).key() < key) {
-                curr = curr.getNext(i);
-            }
-            update[i] = curr;
-        }
-
-        SkipListNode nodeToDelete = update[0].getNext(0);
-        if (nodeToDelete != skipListNode) {
+        if (predecessors.nodes()[0].getNext(0) != skipListNode) {
             return false;
         }
 
-        for (int i = 0; i <= currentMaxHeight; i++) {
-            SkipListNode prev = update[i];
+        unlink(skipListNode, predecessors);
+        size--;
 
-            if (prev.getNext(i) == nodeToDelete) {
+        while (head.height() > 0 && head.getNext(head.height()) == tail) {
+            decreaseHeight();
+        }
+
+        return true;
+    }
+
+    // On each level, the last node before a key and its rank, the number of steps from the head at level 0.
+    private record Predecessors(SkipListNode[] nodes, int[] ranks) {}
+
+    private Predecessors predecessorsOf(int key) {
+        int currentMaxHeight = head.height();
+
+        SkipListNode[] nodes = new SkipListNode[currentMaxHeight + 1];
+        int[] ranks = new int[currentMaxHeight + 1];
+
+        SkipListNode curr = head;
+        int currentRank = 0;
+
+        for (int i = currentMaxHeight; i >= 0; i--) {
+            while (curr.getNext(i) != tail && curr.getNext(i).key() < key) {
+                currentRank += curr.getNextWidth(i);
+                curr = curr.getNext(i);
+            }
+
+            nodes[i] = curr;
+            ranks[i] = currentRank;
+        }
+
+        return new Predecessors(nodes, ranks);
+    }
+
+    // Links newNode in after its predecessors on levels 0 to nodeHeight, and widens each link above them by one.
+    private void linkIn(SkipListNode newNode, int nodeHeight, Predecessors predecessors) {
+        int newNodeRank = predecessors.ranks()[0] + 1;
+
+        for (int i = 0; i < predecessors.nodes().length; i++) {
+            SkipListNode prev = predecessors.nodes()[i];
+            SkipListNode next = prev.getNext(i);
+
+            if (i <= nodeHeight) {
+                int oldWidth = prev.getNextWidth(i);
+
+                newNode.addLevel(next, prev);
+                prev.setNext(i, newNode);
+                next.setPrev(i, newNode);
+
+                int widthToNew = newNodeRank - predecessors.ranks()[i];
+                int widthFromNew = oldWidth - widthToNew + 1;
+
+                prev.setNextWidth(i, widthToNew);
+                newNode.setNextWidth(i, widthFromNew);
+
+            } else {
+                int oldWidth = prev.getNextWidth(i);
+                prev.setNextWidth(i, oldWidth + 1);
+            }
+        }
+    }
+
+    // Unlinks node from every level it is on, and narrows each link that passed over it by one.
+    private void unlink(SkipListNode node, Predecessors predecessors) {
+        for (int i = 0; i < predecessors.nodes().length; i++) {
+            SkipListNode prev = predecessors.nodes()[i];
+
+            if (prev.getNext(i) == node) {
                 int widthToNode = prev.getNextWidth(i);
-                int widthFromNode = nodeToDelete.getNextWidth(i);
+                int widthFromNode = node.getNextWidth(i);
                 prev.setNextWidth(i, widthToNode + widthFromNode - 1);
 
-                SkipListNode nextNode = nodeToDelete.getNext(i);
+                SkipListNode nextNode = node.getNext(i);
                 prev.setNext(i, nextNode);
                 nextNode.setPrev(i, prev);
 
@@ -138,13 +150,6 @@ abstract public class AbstractSkipList {
                 prev.setNextWidth(i, oldWidth - 1);
             }
         }
-        size--;
-
-        while (head.height() > 0 && head.getNext(head.height()) == tail) {
-            decreaseHeight();
-        }
-
-        return true;
     }
 
     public SkipListNode predecessor(SkipListNode skipListNode) {
@@ -157,7 +162,7 @@ abstract public class AbstractSkipList {
 
     public SkipListNode minimum() {
         if (head.getNext(0) == tail) {
-            throw new NoSuchElementException("Empty Linked-List");
+            throw new NoSuchElementException("minimum of an empty skip list");
         }
 
         return head.getNext(0);
@@ -165,7 +170,7 @@ abstract public class AbstractSkipList {
 
     public SkipListNode maximum() {
         if (tail.getPrev(0) == head) {
-            throw new NoSuchElementException("Empty Linked-List");
+            throw new NoSuchElementException("maximum of an empty skip list");
         }
 
         return tail.getPrev(0);
@@ -181,9 +186,9 @@ abstract public class AbstractSkipList {
                 s.append("    ");
             }
             else {
-            	s.append("    ");
-            	for (int i = 0; i < curr.key().toString().length(); i = i + 1)
-            		s.append(" ");
+                s.append("    ");
+                for (int i = 0; i < curr.key().toString().length(); i = i + 1)
+                    s.append(" ");
             }
 
             curr = curr.getNext(0);
@@ -210,59 +215,41 @@ abstract public class AbstractSkipList {
         private int height;
 
         public SkipListNode(int key) {
-        	super(key);
+            super(key);
             next = new ArrayList<>();
             prev = new ArrayList<>();
             nextWidth = new ArrayList<>();
             this.height = -1;
-            
+
         }
 
         public SkipListNode getPrev(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return prev.get(level);
         }
 
         public SkipListNode getNext(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return next.get(level);
         }
 
         public int getNextWidth(int level) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             return nextWidth.get(level);
         }
 
         public void setNext(int level, SkipListNode next) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.next.set(level, next);
         }
 
         public void setPrev(int level, SkipListNode prev) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.prev.set(level, prev);
         }
 
         public void setNextWidth(int level, int nextWidth) {
-            if (level > height) {
-                throw new IllegalStateException("Fetching height higher than current node height");
-            }
-
+            checkLevel(level);
             this.nextWidth.set(level, nextWidth);
         }
 
@@ -272,8 +259,8 @@ abstract public class AbstractSkipList {
             this.prev.add(prev);
             this.nextWidth.add(0);
         }
-		
-		public void removeLevel() {           
+
+        public void removeLevel() {
             this.next.remove(height);
             this.prev.remove(height);
             this.nextWidth.remove(height);
@@ -281,5 +268,11 @@ abstract public class AbstractSkipList {
         }
 
         public int height() { return height; }
+
+        private void checkLevel(int level) {
+            if (level > height) {
+                throw new IllegalStateException("Level " + level + " is above this node's height " + height);
+            }
+        }
     }
 }

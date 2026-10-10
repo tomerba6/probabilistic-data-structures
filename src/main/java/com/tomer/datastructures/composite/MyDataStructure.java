@@ -15,22 +15,17 @@ import java.util.List;
  * Theta(1) contains queries and direct node access to prevent redundant searches.
  */
 public class MyDataStructure {
-    /*
-     * We use a composite data structure combining:
-     * 1. A ChainedHashTable for expected O(1) searches. It maps a value to its SkipListNode.
-     * 2. An IndexableSkipList for O(log n) order-statistics operations (Rank, Select)
-     * and sequential traversal.
-     */
-    private IndexableSkipList skipList;
-    private final double PROBABILITY = 0.5;
-    private ChainedHashTable<Integer, AbstractSkipList.SkipListNode> hashTable;
+    private static final double SKIP_LIST_PROBABILITY = 0.5;
+
+    private final IndexableSkipList skipList;
+    private final ChainedHashTable<Integer, AbstractSkipList.SkipListNode> hashTable;
     private final int capacity;
     private int size;
 
     /**
      * Initializes the data structure for a maximum of N items.
-     * Calculates the minimal power of 2 (k) where 2^k >= N, and initializes a
-     * ChainedHashTable with capacity 2^k and a load factor >= 1.0 to prevent rehashing.
+     * Calculates the smallest k >= 1 where 2^k >= N, and initializes a
+     * ChainedHashTable with capacity 2^k and a max load factor above 1.0 to prevent rehashing.
      * Time Complexity: Theta(log N) for k calculation, Theta(N) worst-case to
      * initialize the hash table array and empty linked lists. Total: Theta(N) Worst Case.
      *
@@ -39,9 +34,9 @@ public class MyDataStructure {
     public MyDataStructure(int N) {
         this.capacity = N;
         this.size = 0;
-        this.skipList = new IndexableSkipList(PROBABILITY);
+        this.skipList = new IndexableSkipList(SKIP_LIST_PROBABILITY);
 
-        // Calculate the minimum k such that 2^k >= N
+        // Calculate the smallest k >= 1 such that 2^k >= N
         int k = 1;
         while ((1 << k) < N) {
             k++;

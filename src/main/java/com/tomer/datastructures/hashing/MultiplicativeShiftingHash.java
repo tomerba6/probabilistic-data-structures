@@ -1,7 +1,5 @@
 package com.tomer.datastructures.hashing;
 
-import java.util.Random;
-
 public class MultiplicativeShiftingHash implements HashFactory<Long> {
     private HashingUtils utils;
 
@@ -20,8 +18,8 @@ public class MultiplicativeShiftingHash implements HashFactory<Long> {
         final private long k;
 
         public Functor(int k) {
-            if (k < 0 || k > 30) {
-                throw new IllegalArgumentException("k must be between 0 and 30. Received: " + k);
+            if (k < 0 || k > MAX_K) {
+                throw new IllegalArgumentException("k must be between 0 and " + MAX_K + ". Received: " + k);
             }
             this.a = utils.genLong(2L, Long.MAX_VALUE);
             this.k = k;
