@@ -33,7 +33,8 @@ abstract public class AbstractSkipList {
     public SkipListNode search(int key) {
         SkipListNode curr = find(key);
 
-        return curr.key() == key ? curr : null;
+        // find returns the head for a key below every element, and the head's key is Integer.MIN_VALUE.
+        return curr != head && curr.key() == key ? curr : null;
     }
 
     public SkipListNode insert(int key) {
