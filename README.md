@@ -31,3 +31,7 @@ timings are printed for reading, not asserted, so no test runs it.
 `verify` also checks the doc comments: javadoc fails the build when a public or protected declaration
 has no doc comment, or has one it cannot parse, such as an unescaped `<`. The API docs it writes land
 in `target/reports/apidocs/index.html`.
+
+## License
+
+Released under the MIT License. See [LICENSE](LICENSE).
