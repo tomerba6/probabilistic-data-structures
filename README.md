@@ -22,8 +22,8 @@ A failing test stops the build before that report is written; `./mvnw surefire-r
 then writes it from the results the failed run left in `target/surefire-reports`.
 
 `verify` also writes the JaCoCo coverage report to `target/site/jacoco/index.html`, and fails the build
-if line coverage drops below 90%. Coverage is about 94% of lines. It can move by a line between
-runs, because one line, in rehashing, runs only when a random hash happens to collide two keys.
+if line coverage drops below 90%. Coverage can move by a line between runs, because one line, in
+rehashing, runs only when a random hash happens to collide two keys.
 
 The `experiments` package is left out of the report and the floor. It is benchmark code: its
 timings are printed for reading, not asserted, so no test runs it.
