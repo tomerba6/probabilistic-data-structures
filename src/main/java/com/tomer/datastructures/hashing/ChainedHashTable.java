@@ -21,10 +21,7 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
         this.capacity = 1 << k;
         this.k = k;
         this.hashFunc = hashFactory.pickHash(k);
-        this.table = new List[this.capacity];
-        for (int i = 0; i < this.capacity; i = i + 1) {
-            this.table[i] = new LinkedList<>();
-        }
+        this.table = newBuckets(this.capacity);
         this.tableSize = 0;
 
     }
@@ -52,10 +49,7 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
     private void rehashTable() {
         this.k++;
         int newCapacity = this.capacity << 1;
-        List<Element<K,V>>[] newTable = new List[newCapacity];
-        for (int i = 0; i < newCapacity; i = i + 1) {
-            newTable[i] = new LinkedList<>();
-        }
+        List<Element<K,V>>[] newTable = newBuckets(newCapacity);
 
         this.hashFunc = hashFactory.pickHash(k);
         for (int i = 0; i < this.capacity; i = i + 1) {
@@ -67,6 +61,17 @@ public class ChainedHashTable<K, V> implements HashTable<K, V> {
 
         this.table = newTable;
         this.capacity = newCapacity;
+    }
+
+    // Java can't create an array of a generic type, so this creates a List<?>[] and casts it. The cast is
+    // safe: every bucket starts as a new empty list, and only Element<K,V> values are ever added to one.
+    @SuppressWarnings("unchecked")
+    private List<Element<K,V>>[] newBuckets(int count) {
+        List<Element<K,V>>[] buckets = (List<Element<K,V>>[]) new List<?>[count];
+        for (int i = 0; i < count; i = i + 1) {
+            buckets[i] = new LinkedList<>();
+        }
+        return buckets;
     }
 
     public boolean delete(K key) {
