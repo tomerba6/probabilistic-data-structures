@@ -17,7 +17,7 @@ public class HashingUtils {
     public HashingUtils() {
         rand = new Random(System.currentTimeMillis()); // Using current time as the random seed
     }
-    
+
     public static long mod(long x, long m) {
         long res = x % m;
 
@@ -29,21 +29,21 @@ public class HashingUtils {
 
         return (res < 0) ? res + m : res;
     }
-    
+
     /***
      * Generates random prime in the range [lower, higher].
      * @param lower - a lower bound for the returned value
      * @param higher - an upper bound for the returned value
      * @return a random prime, between lower and higher
-     */    
+     */
     public long genPrime(long lower, long higher) {
-    	long suspectPrime = genLong(lower,higher);
+        long suspectPrime = genLong(lower,higher);
         while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, MILLER_RABIN_ROUNDS)){
             suspectPrime = genLong(lower,higher);
         }
         return suspectPrime;
     }
-    
+
     /***
      * Generates random long values until getting a value in the range [lower, higher].
      * @param lower - a lower bound for the returned value
@@ -51,12 +51,12 @@ public class HashingUtils {
      * @return a random long, between lower and higher
      */
     public long genLong(long lower, long higher) {
-    	long value = rand.nextLong();
-    	while (value < lower | value > higher)
-    		value = rand.nextLong();
-    	return value;
+        long value = rand.nextLong();
+        while (value < lower | value > higher)
+            value = rand.nextLong();
+        return value;
     }
-    
+
     public Integer[] genUniqueIntegers(int numOfItemsToGen) {
         return Stream.generate(() -> rand.ints(0, Integer.MAX_VALUE))
                 .flatMap(IntStream::boxed)
@@ -108,7 +108,7 @@ public class HashingUtils {
         return res.longValue();
     }
 
-    
+
     /**
      * An implementation of the Rabin-Miller probabilistic primality test as defined in the following link:
      * <a href="https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test">...</a>

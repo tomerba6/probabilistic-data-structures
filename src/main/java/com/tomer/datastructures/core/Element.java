@@ -6,47 +6,44 @@ package com.tomer.datastructures.core;
  * @param <K> The type of the key.
  * @param <V> The type of the satellite data.
  */
-public class Element<K,V> {	
-//--------------------fields-------------------------------------------
-	private K key;
-	private V satelliteData;
+public class Element<K,V> {
+    private K key;
+    private V satelliteData;
 
-//--------------------constructors-------------------------------------
-	public Element(K key, V satelliteData) {
-		this.key = key;
-		this.satelliteData = satelliteData;
-	}
-	
-	public Element(K key) {
-		this(key, null);
-	}
+    public Element(K key, V satelliteData) {
+        this.key = key;
+        this.satelliteData = satelliteData;
+    }
 
-//--------------------methods-------------------------------------
-	public K key() {
-		return this.key;
-	}
-	
-	public V satelliteData() {
-		return this.satelliteData;
-	}
+    public Element(K key) {
+        this(key, null);
+    }
 
-	public boolean equals(Object other){
-		boolean ans = false;        
-		if (other instanceof Element<?,?>) {
-			Element<?,?> castedOther = (Element<?,?>) other;  
-			boolean sameSatData;
-			if (this.satelliteData() == null)
-				sameSatData = (castedOther.satelliteData() == null);
-			else {
-				sameSatData = this.satelliteData().equals(castedOther.satelliteData());
-			}
+    public K key() {
+        return this.key;
+    }
+
+    public V satelliteData() {
+        return this.satelliteData;
+    }
+
+    public boolean equals(Object other){
+        boolean ans = false;
+        if (other instanceof Element<?,?>) {
+            Element<?,?> castedOther = (Element<?,?>) other;
+            boolean sameSatData;
+            if (this.satelliteData() == null)
+                sameSatData = (castedOther.satelliteData() == null);
+            else {
+                sameSatData = this.satelliteData().equals(castedOther.satelliteData());
+            }
             ans = this.key() == castedOther.key() & sameSatData;
-        }        
+        }
         return ans;
-	}
-	
-	public String toString() {
-		return "[" + this.key() + "]";
-	}
-	
+    }
+
+    public String toString() {
+        return "[" + this.key() + "]";
+    }
+
 }

@@ -1,13 +1,13 @@
 package com.tomer.datastructures.skiplist;
 
 public class IndexableSkipList extends AbstractSkipList {
-    final protected double p;	// p is the probability for "success" in the geometric process generating the height of each node.
+    final protected double p; // p is the probability for "success" in the geometric process generating the height of each node.
     public IndexableSkipList(double probability) {
         super();
         this.p = probability;
     }
 
-	@Override
+    @Override
     public void decreaseHeight() {
         head.removeLevel();
         tail.removeLevel();
@@ -25,13 +25,13 @@ public class IndexableSkipList extends AbstractSkipList {
     }
 
     @Override
-        public int generateHeight() {
-            int height = 0;
-            while (Math.random() >= this.p) {
-                height++;
-            }
-            return height;
+    public int generateHeight() {
+        int height = 0;
+        while (Math.random() >= this.p) {
+            height++;
         }
+        return height;
+    }
 
     public int rank(int key) {
         int currentRank = 0;
