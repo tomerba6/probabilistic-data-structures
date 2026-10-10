@@ -8,6 +8,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class HashingUtils {
+    // Rounds of the Miller-Rabin test that genPrime runs on each candidate. The textbook bound on a
+    // composite passing all of them is 4^-rounds.
+    private static final int MILLER_RABIN_ROUNDS = 50;
+
     final private Random rand;
 
     public HashingUtils() {
@@ -34,7 +38,7 @@ public class HashingUtils {
      */    
     public long genPrime(long lower, long higher) {
     	long suspectPrime = genLong(lower,higher);
-        while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, 50)){
+        while (((suspectPrime & 1) == 0) || !runMillerRabinTest(suspectPrime, MILLER_RABIN_ROUNDS)){
             suspectPrime = genLong(lower,higher);
         }
         return suspectPrime;
@@ -110,7 +114,7 @@ public class HashingUtils {
      * <a href="https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Miller%E2%80%93Rabin_test">...</a>
      * This process requires theta of (rounds * log(suspect) ^ 3)
      * @param suspect - The number suspected of being prime, assuming suspect isn't even.
-     * @param rounds - The number of rounds to run the test. A good default value is 50.
+     * @param rounds - The number of rounds to run the test. genPrime passes {@code MILLER_RABIN_ROUNDS}.
      * @return True if suspect is probably prime with a false positive p of 4^(-rounds)
      */
     private boolean runMillerRabinTest(long suspect, int rounds) {
