@@ -33,6 +33,22 @@ jobs:
       - name: Build, test and enforce the coverage floor
         run: ./mvnw -B --no-transfer-progress verify
 
+      # verify writes the test report itself, but a failing test stops the build first. Then it is
+      # written from the results the tests left. With no results (the build failed before any test
+      # ran) there is nothing to report, and an empty report would read as "0 tests".
+      - name: Write the test report after a failed build
+        if: ${{ failure() && hashFiles('target/surefire-reports/TEST-*.xml') != '' }}
+        run: ./mvnw -B --no-transfer-progress surefire-report:report-only
+
+      # Every JDK uploads its own, since a test can fail on one JDK only.
+      - name: Upload test report
+        if: ${{ !cancelled() && hashFiles('target/surefire-reports/TEST-*.xml') != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-jdk${{ matrix.java }}
+          path: target/reports/
+          if-no-files-found: error
+
       - name: Upload coverage report
         if: matrix.java == '17'
         uses: actions/upload-artifact@v7
